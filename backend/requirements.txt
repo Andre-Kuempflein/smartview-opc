@@ -1,0 +1,19 @@
+# ============================================================
+# requirements.txt – Python-Abhängigkeiten für SmartView OPC
+# ============================================================
+# Installation:
+#   pip install -r requirements.txt
+#
+# Auf dem Raspberry Pi:
+#   pip3 install -r requirements.txt
+# ============================================================
+
+# OPC UA Client (synchron, kompatibel mit Siemens S7-1516)
+opcua==0.98.13
+
+# Web-Framework für REST API und SSE-Datenstrom
+flask==3.0.3
+
+# Produktiv-WSGI-Server (schneller als Flasks eingebauter Entwicklungsserver)
+# Auf dem Raspberry Pi empfohlen für stabilen 24/7-Betrieb
+gunicorn==22.0.0

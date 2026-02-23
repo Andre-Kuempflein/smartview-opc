@@ -1,0 +1,58 @@
+# ============================================================
+# docker-compose.yml – SmartView OPC
+# ============================================================
+# Startet den SmartView OPC Server als Docker-Dienst.
+#
+# Start:       docker compose up -d
+# Stop:        docker compose down
+# Logs:        docker compose logs -f
+# Neubauen:    docker compose up -d --build
+# ============================================================
+
+version: "3.9"
+
+services:
+
+  # ── SmartView OPC Server ────────────────────────────────────────────────
+  smartview-opc:
+
+    # Docker-Image aus dem lokalen Dockerfile bauen
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Containername (für docker logs, docker exec etc.)
+    container_name: smartview-opc
+
+    # Port-Mapping: Host-Port 5000 → Container-Port 5000
+    # Im Browser erreichbar unter: http://localhost:5000
+    # <<< HIER BITTE Host-Port anpassen wenn 5000 bereits belegt >>>
+    ports:
+      - "5000:5000"
+
+    # Volumes: CSV-History wird auf dem Host gespeichert (kein Datenverlust beim Neustart)
+    volumes:
+      - ./data:/app/data
+
+    # Umgebungsvariablen (überschreiben die Werte in config.py wenn gewünscht)
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+
+    # Netzwerk: Standard-Bridge (Container kann ins Internet und Intranet)
+    # Für Zugriff auf die S7-1516 muss der Host im gleichen Netzwerk sein.
+    # <<< HIER BITTE Netzwerk anpassen wenn die S7-1516 in einem separaten VLAN ist >>>
+    network_mode: host
+    # Hinweis: network_mode: host erlaubt direkten Zugriff auf alle Netzwerkinterfaces
+    # des Hosts. Erforderlich wenn der OPC UA Server auf der gleichen Maschine oder
+    # im lokalen Netzwerk erreichbar sein muss.
+
+    # Neustart-Policy: Container wird bei Absturz oder Neustart des Hosts automatisch gestartet
+    restart: unless-stopped
+
+    # Logging-Konfiguration (begrenzt Logfile-Größe)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
