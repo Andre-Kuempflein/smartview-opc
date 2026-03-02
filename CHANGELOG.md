@@ -5,6 +5,36 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.0.0] – 2026-03-02 – Förderbandstation
+
+### Geändert
+- **SPS-Konfiguration**: Neuer OPC UA Endpoint `opc.tcp://192.168.6.12:4840` (S7-1500)
+- **TAG_NODES**: Druckluft-Analogwert entfernt → 2 digitale Endlagen-Status aus DB1
+  - `endlage_eingefahren` (`ns=3;s="DB1"."xEndlage_Ausschiebezyl_Eingefahren"`)
+  - `endlage_ausgefahren` (`ns=3;s="DB1"."xEndlage_Ausschiebezyl_Ausgefahren"`)
+- **CONTROL_NODES**: 4 Zylinder-Steuerungen entfernt → 3 Taster aus DB1
+  - `taster_start` (`ns=3;s="DB1"."xTaster_Start"`)
+  - `schalter_stopp` (`ns=3;s="DB1"."xSchalter_Stopp"`)
+  - `taster_reset` (`ns=3;s="DB1"."xTaster_Reset"`)
+- **Frontend**: Komplettes Redesign des Dashboards
+  - Endlagen-Status als LED-Indikatoren (AKTIV/INAKTIV mit Glow-Effekt)
+  - Start (grün), Stopp (rot), Reset (gelb) Buttons mit farbigen Icons
+  - Seitentitel: „Förderbandstation" statt „Prozessdaten Dashboard"
+
+### Hinzugefügt
+- **Historietabelle**: Aufklappbare Sektion im Dashboard (Bootstrap Collapse)
+  - Zeigt letzte 50 Endlagen-Statusänderungen mit Zeitstempel
+  - Auto-Refresh alle 5 Sekunden wenn geöffnet
+  - Button wechselt zwischen „Anzeigen" / „Ausblenden"
+- **Digital-Tag-Support**: `updateDigitalCard()` in `app.js` für Bool-Werte
+- **Demo-Simulation**: `_read_demo_values()` simuliert Bool-Endlagen statt Druckluft-Sinus
+
+### Behoben
+- `/api/config` Endpunkt: `cfg["unit"]` → `cfg.get("unit", "")` für digitale Tags ohne Einheit
+- Tag-Initialisierung: `unit`-Feld ist jetzt optional in `opc_client.py`
+
+---
+
 ## [1.0.0] – 2025-02-13 – Erstveröffentlichung
 
 ### Hinzugefügt

@@ -1,21 +1,24 @@
-# SmartView OPC – Prozessdaten im Griff
+# SmartView OPC – Förderbandstation
 
-> SCADA-System für Industrie 4.0 | Siemens S7-1516 via OPC UA | Raspberry Pi 4B Edge Device
+> SCADA-System für Industrie 4.0 | Siemens S7-1500 via OPC UA | Raspberry Pi 4B Edge Device
 
 ---
 
 ## Projektbeschreibung
 
-SmartView OPC ist ein leichtgewichtiges SCADA-System (Supervisory Control and Data Acquisition), das Prozessdaten von einer **Siemens S7-1516 SPS** über das **OPC UA Protokoll** (IEC 62541) ausliest und auf einem modernen, responsiven **Web-Dashboard** visualisiert.
+SmartView OPC ist ein leichtgewichtiges SCADA-System (Supervisory Control and Data Acquisition), das Prozessdaten von einer **Siemens S7-1500 SPS** (IP: `192.168.6.12`) über das **OPC UA Protokoll** (IEC 62541) ausliest und auf einem modernen, responsiven **Web-Dashboard** visualisiert.
+
+Aktuell konfiguriert für die **Förderbandstation** mit Endlagen-Erkennung und Start/Stopp/Reset-Steuerung.
 
 Das System läuft vollständig auf einem **Raspberry Pi 4B** als Edge Device – ohne Cloud-Abhängigkeit, ohne externe Server.
 
 ### Highlights
 
-- Live-Anzeige von Analog- und Digitalwerten über SSE (Server-Sent Events)
+- Live-Anzeige von Digital-Status (Endlagen-LEDs) und Steuerung (Taster-Buttons)
 - Automatischer Reconnect bei Verbindungsverlust zur SPS
 - Grenzwert-Alarmierung mit optischem Hinweis im Browser
 - CSV-Historisierung aller Messwerte
+- Aufklappbare Historietabelle im Dashboard
 - Docker-Unterstützung für einfaches Deployment
 - Vollständig kommentierter, gut strukturierter Code
 
@@ -26,11 +29,11 @@ Das System läuft vollständig auf einem **Raspberry Pi 4B** als Edge Device –
 ```
   Feldebene                Steuerung              Edge Device (RPi 4B)         Browser
  ┌──────────┐             ┌──────────────┐        ┌─────────────────────┐    ┌──────────┐
- │ Sensoren │──PROFINET──►│ Siemens      │OPC UA  │ opc_client.py       │    │          │
- │ Aktoren  │             │ S7-1516      │◄──────►│ app.py (Flask)      │SSE │ Dashboard│
- │          │             │              │        │ history.py (CSV)    │───►│ Bootstrap│
- └──────────┘             │ OPC UA :4840 │        │                     │    │ 5        │
-                          └──────────────┘        │ Port :5000          │    └──────────┘
+ │Endlagen- │──PROFINET──►│ Siemens      │OPC UA  │ opc_client.py       │    │          │
+ │sensoren  │             │ S7-1500      │◄──────►│ app.py (Flask)      │HTTP│ Dashboard│
+ │Förder-   │             │ 192.168.6.12 │        │ history.py (CSV)    │───►│ Bootstrap│
+ │band      │             │ OPC UA :4840 │        │                     │    │ 5        │
+ └──────────┘             └──────────────┘        │ Port :5000          │    └──────────┘
                                                   └─────────────────────┘
 ```
 
@@ -113,18 +116,23 @@ Die gesamte Konfiguration befindet sich in `backend/config.py`.
 
 ### Pflichtfelder (vor erstem Start ausfüllen!)
 
-| Einstellung       | Beschreibung                          | Standard                      |
-|------------------|---------------------------------------|-------------------------------|
-| `OPC_SERVER_URL` | IP + Port des OPC UA Servers (S7-1516)| `opc.tcp://192.168.0.1:4840`  |
-| `OPC_TAGS`       | Node-IDs der SPS-Variablen            | Beispiel-Node-IDs (Platzhalter)|
+| Einstellung          | Beschreibung                          | Aktueller Wert                      |
+|---------------------|---------------------------------------|-------------------------------------|
+| `OPC_UA_ENDPOINT`   | IP + Port des OPC UA Servers (S7-1500)| `opc.tcp://192.168.6.12:4840`       |
+| `TAG_NODES`         | Lesbare Variablen (Endlagen)          | `endlage_eingefahren`, `endlage_ausgefahren` |
+| `CONTROL_NODES`     | Steuerbare Variablen (Taster)         | `taster_start`, `schalter_stopp`, `taster_reset` |
 
-### OPC UA Node-IDs für Siemens S7-1516
+### OPC UA Node-IDs (Förderbandstation – DB1)
 
-Format: `ns=3;s="Datenbaustein"."Variablenname"`
+| Variable               | Node-ID                                              | Typ     |
+|------------------------|------------------------------------------------------|---------|
+| Endlage Eingefahren    | `ns=3;s="DB1"."xEndlage_Ausschiebezyl_Eingefahren"` | Bool    |
+| Endlage Ausgefahren    | `ns=3;s="DB1"."xEndlage_Ausschiebezyl_Ausgefahren"` | Bool    |
+| Taster Start           | `ns=3;s="DB1"."xTaster_Start"`                      | Bool    |
+| Schalter Stopp         | `ns=3;s="DB1"."xSchalter_Stopp"`                    | Bool    |
+| Taster Reset           | `ns=3;s="DB1"."xTaster_Reset"`                      | Bool    |
 
-Beispiel: `ns=3;s="DB_Prozess"."Temperatur_Kessel"`
-
-Node-IDs können mit **Siemens UaExpert** oder im TIA Portal unter *OPC UA → Serverübersicht* ermittelt werden.
+Node-IDs können mit **UaExpert** oder im TIA Portal unter *OPC UA → Serverübersicht* ermittelt werden.
 
 ### Weitere Einstellungen
 
@@ -139,27 +147,31 @@ Node-IDs können mit **Siemens UaExpert** oder im TIA Portal unter *OPC UA → S
 
 ## API-Dokumentation
 
-| Endpunkt                 | Methode | Beschreibung                             |
-|--------------------------|---------|------------------------------------------|
-| `/`                      | GET     | Dashboard (HTML)                         |
-| `/api/tags`              | GET     | Alle aktuellen Tagwerte (JSON)           |
-| `/api/tags/<name>`       | GET     | Einzelner Tagwert (JSON)                 |
-| `/api/status`            | GET     | OPC UA Verbindungsstatus (JSON)          |
-| `/api/alarms`            | GET     | Aktive Alarme (JSON)                     |
-| `/api/history?count=N`   | GET     | Letzte N Historieeinträge (JSON)         |
-| `/api/stream`            | GET     | SSE Live-Datenstrom (text/event-stream)  |
+| Endpunkt                        | Methode | Beschreibung                             |
+|---------------------------------|---------|------------------------------------------|
+| `/`                             | GET     | Dashboard (HTML)                         |
+| `/api/data`                     | GET     | Alle Tag-Werte + Steuerungs-Zustände     |
+| `/api/tags/<name>`              | GET     | Einzelner Tagwert (JSON)                 |
+| `/api/alerts`                   | GET     | Aktive Alarme (JSON)                     |
+| `/api/history/<tag_name>`       | GET     | Historische Werte eines Tags (JSON)      |
+| `/api/config`                   | GET     | Tag- und Steuerungs-Konfiguration        |
+| `/api/control/<ctrl_name>`      | POST    | Steuerung schalten (`{"value": true}`)   |
 
 ### Beispielaufruf
 
 ```bash
 # Alle aktuellen Werte abrufen
-curl http://localhost:5000/api/tags
+curl http://localhost:5000/api/data
 
-# Einzelnen Wert abfragen
-curl http://localhost:5000/api/tags/temperatur_kessel
+# Endlage-Status abfragen
+curl http://localhost:5000/api/tags/endlage_eingefahren
 
-# Letzte 50 Historieeinträge
-curl http://localhost:5000/api/history?count=50
+# Start-Taster aktivieren
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"value": true}' http://localhost:5000/api/control/taster_start
+
+# Historie der Endlage abrufen
+curl http://localhost:5000/api/history/endlage_eingefahren
 ```
 
 ---
@@ -170,7 +182,7 @@ curl http://localhost:5000/api/history?count=50
 
 - Raspberry Pi 4B mit Raspberry Pi OS (64-bit empfohlen)
 - Python 3.9 oder höher
-- Netzwerkverbindung zur Siemens S7-1516 (gleiches Subnetz oder geroutet)
+- Netzwerkverbindung zur Siemens S7-1500 (gleiches Subnetz: `192.168.6.x`)
 
 ### Installation ohne Docker
 
@@ -218,31 +230,33 @@ sudo systemctl status smartview
 
 ## Features
 
-### Pflicht (implementiert)
+### Förderbandstation (v2.0)
 
-- [x] OPC UA Client mit 3 Analogwerten (Temperatur, Druck, Füllstand)
-- [x] OPC UA Client mit 3 Digitalwerten (Pumpe, Ventil, Störung)
-- [x] REST API: `GET /api/tags` und `GET /api/tags/<name>`
-- [x] Webseite mit Live-Anzeige aller Werte
+- [x] OPC UA Client mit 2 Digitalwerten (Endlage Eingefahren/Ausgefahren)
+- [x] OPC UA Client mit 3 Steuerungen (Start, Stopp, Reset)
+- [x] REST API: `GET /api/data`, `POST /api/control/<name>`
+- [x] Webseite mit Live-Endlagen-LEDs und Steuerungs-Buttons
+- [x] Aufklappbare Historietabelle (letzte 50 Statusänderungen)
+- [x] Demo-Modus für Entwicklung ohne SPS
 - [x] README + Architekturdiagramm
 
 ### Bonus (implementiert)
 
-- [x] **SSE statt Polling** (+5 Punkte): `/api/stream` sendet Updates per Server-Sent Events
-- [x] **Alarmierung** (+1 Punkt): Grenzwertüberschreitung → blinkendes Alarm-Banner
-- [x] **CSV-History** (+2 Punkte): Alle Messwerte werden minütlich in `data/history.csv` gespeichert
-- [x] **Docker** (+6 Punkte): Dockerfile + docker-compose.yml vorhanden
+- [x] **Alarmierung**: Grenzwertüberschreitung → blinkendes Alarm-Banner
+- [x] **CSV-History**: Alle Messwerte werden periodisch in `data/history.csv` gespeichert
+- [x] **Docker**: Dockerfile + docker-compose.yml vorhanden
+- [x] **In-Memory-Historie**: Aufklappbare Tabelle im Dashboard
 
 ---
 
 ## Screenshots
 
 Das Dashboard zeigt:
-1. **Navbar**: Projektname + Verbindungsstatus (grün/rot)
-2. **Alarm-Banner**: Blinkt rot bei Grenzwertüberschreitung
-3. **Analogwert-Karten**: Wert + Einheit + Fortschrittsbalken (farbkodiert)
-4. **Digitalwert-Karten**: EIN/AUS mit grünem/grauem Icon
-5. **Verlauf**: Tabellarische Darstellung der letzten Messwerte
+1. **Navbar**: Projektname + Verbindungsstatus (grün/rot) + DEMO-Badge
+2. **Endlagen-Status**: LED-Indikatoren für Eingefahren/Ausgefahren (AKTIV/INAKTIV)
+3. **Steuerung**: Start (grün), Stopp (rot), Reset (gelb) Buttons
+4. **Historie**: Aufklappbare Tabelle der letzten Statusänderungen
+5. **Alarm-Banner**: Blinkt rot bei Grenzwertüberschreitung
 
 ---
 
