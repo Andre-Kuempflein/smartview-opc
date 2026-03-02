@@ -60,7 +60,7 @@ class OPCUAClient:
                 "timestamp": None,
                 "quality": "unknown",
                 "display_name": tag_cfg["display_name"],
-                "unit": tag_cfg["unit"],
+                "unit": tag_cfg.get("unit", ""),
                 "type": tag_cfg["type"],
             }
             self._history[tag_name] = deque(maxlen=HISTORY_MAX_LENGTH)
@@ -167,23 +167,32 @@ class OPCUAClient:
                 logger.error("Fehler beim Lesen von '%s': %s", ctrl_name, e)
 
     def _read_demo_values(self, now):
-        """Simuliert Druckluft-Werte im Demo-Modus."""
-        # Druckluft: schwankt realistisch zwischen 4 und 7 bar
-        base = 5.5
-        noise = random.uniform(-0.3, 0.3)
-        wave = math.sin(self._demo_tick * 0.05) * 1.2
-        value = round(base + wave + noise, 1)
+        """Simuliert Endlagen-Status im Demo-Modus (Bool-Werte)."""
+        # Endlagen wechseln alle ~5 Sekunden zufällig
+        eingefahren = (self._demo_tick // 5) % 2 == 0
+        ausgefahren = not eingefahren
+
+        # Gelegentlich beide aus (Zwischenstellung)
+        if random.random() < 0.1:
+            eingefahren = False
+            ausgefahren = False
 
         with self._lock:
-            self._values["druckluft"]["value"] = value
-            self._values["druckluft"]["timestamp"] = now
-            self._values["druckluft"]["quality"] = "good"
-            self._history["druckluft"].append({
-                "value": value,
+            self._values["endlage_eingefahren"]["value"] = eingefahren
+            self._values["endlage_eingefahren"]["timestamp"] = now
+            self._values["endlage_eingefahren"]["quality"] = "good"
+            self._history["endlage_eingefahren"].append({
+                "value": eingefahren,
                 "timestamp": now,
             })
 
-        self._check_alerts("druckluft", value, TAG_NODES["druckluft"])
+            self._values["endlage_ausgefahren"]["value"] = ausgefahren
+            self._values["endlage_ausgefahren"]["timestamp"] = now
+            self._values["endlage_ausgefahren"]["quality"] = "good"
+            self._history["endlage_ausgefahren"].append({
+                "value": ausgefahren,
+                "timestamp": now,
+            })
 
     def _check_alerts(self, tag_name, value, tag_cfg):
         """Prüft Grenzwerte und setzt Alerts."""

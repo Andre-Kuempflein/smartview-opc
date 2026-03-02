@@ -15,16 +15,12 @@ const SmartViewApp = (() => {
     // ── Konfiguration ─────────────────────────
     const API_BASE = "";
     const POLL_INTERVAL_MS = 1500;
-    const ANALOG_RANGES = {
-        druckluft: { min: 0, max: 10 },
-    };
 
     // Control-spezifische Labels
     const CONTROL_LABELS = {
-        zylinder_hoch:   { on: "AUSSCHALTEN", off: "EINSCHALTEN" },
-        zylinder_runter: { on: "AUSSCHALTEN", off: "EINSCHALTEN" },
-        auswerfer:       { on: "EINFAHREN",   off: "AUSFAHREN" },
-        luftrutsche:     { on: "DEAKTIVIEREN", off: "AKTIVIEREN" },
+        taster_start: { on: "STOPPEN", off: "START" },
+        schalter_stopp: { on: "FREIGEBEN", off: "STOPP" },
+        taster_reset: { on: "AKTIV", off: "RESET" },
     };
 
     // ── Zustandsverwaltung ────────────────────
@@ -86,13 +82,15 @@ const SmartViewApp = (() => {
 
 
     // ═══════════════════════════════════════════
-    // Werte-Update (Analog)
+    // Werte-Update (Digital-Status + Analog)
     // ═══════════════════════════════════════════
 
     function updateValues(tags) {
         for (const [name, data] of Object.entries(tags)) {
             if (data.type === "analog") {
                 updateAnalogCard(name, data);
+            } else if (data.type === "digital") {
+                updateDigitalCard(name, data);
             }
 
             // Quality-Badge
@@ -111,9 +109,28 @@ const SmartViewApp = (() => {
         }
     }
 
+    function updateDigitalCard(name, data) {
+        const indicator = document.getElementById(`indicator-${name}`);
+        const label = document.getElementById(`label-${name}`);
+
+        if (!indicator) return;
+
+        const isOn = !!data.value;
+
+        // LED-Indikator
+        indicator.classList.remove("on", "off");
+        indicator.classList.add(isOn ? "on" : "off");
+
+        // Label
+        if (label) {
+            label.textContent = isOn ? "AKTIV" : "INAKTIV";
+            label.classList.remove("on", "off");
+            label.classList.add(isOn ? "on" : "off");
+        }
+    }
+
     function updateAnalogCard(name, data) {
         const valueEl = document.getElementById(`value-${name}`);
-        const barEl = document.getElementById(`bar-${name}`);
         const card = document.getElementById(`card-${name}`);
 
         if (!valueEl || data.value === null || data.value === undefined) return;
@@ -127,15 +144,6 @@ const SmartViewApp = (() => {
             void valueEl.offsetWidth;
             valueEl.classList.add("value-changed");
             previousValues[name] = formatted;
-        }
-
-        // Fortschrittsbalken
-        if (barEl && ANALOG_RANGES[name]) {
-            const range = ANALOG_RANGES[name];
-            const pct = Math.max(0, Math.min(100,
-                ((val - range.min) / (range.max - range.min)) * 100
-            ));
-            barEl.style.width = pct + "%";
         }
 
         // Alert-Zustand

@@ -273,6 +273,26 @@ body {
     color: #6366f1;
 }
 
+.status-icon {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+}
+
+.control-icon-start {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.control-icon-stopp {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.control-icon-reset {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
 .tag-label {
     font-weight: 600;
     font-size: 0.95rem;
