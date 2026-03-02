@@ -101,7 +101,7 @@ def api_config():
     for name, cfg in TAG_NODES.items():
         config[name] = {
             "display_name": cfg["display_name"],
-            "unit": cfg["unit"],
+            "unit": cfg.get("unit", ""),
             "type": cfg["type"],
             "min_alert": cfg.get("min_alert"),
             "max_alert": cfg.get("max_alert"),

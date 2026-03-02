@@ -544,6 +544,48 @@ body {
     opacity: 1;
 }
 
+/* ── History Card ────────────────────────────── */
+.history-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.history-table {
+    font-size: 0.82rem;
+    background: transparent !important;
+}
+
+.history-table thead th {
+    background: rgba(30, 41, 59, 0.6);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    padding: 0.6rem 1rem;
+}
+
+.history-table tbody td {
+    border-bottom: 1px solid rgba(100, 116, 139, 0.08);
+    padding: 0.45rem 1rem;
+    vertical-align: middle;
+}
+
+.history-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.06);
+}
+
+#history-toggle-btn {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+}
+
 /* ── Alerts Banner ───────────────────────────── */
 .alert-banner {
     background: rgba(239, 68, 68, 0.08);

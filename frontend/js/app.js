@@ -327,6 +327,54 @@ const SmartViewApp = (() => {
 
 
     // ═══════════════════════════════════════════
+    // Historie
+    // ═══════════════════════════════════════════
+
+    let historyTimer = null;
+    const HISTORY_TAGS = ["endlage_eingefahren", "endlage_ausgefahren"];
+    const HISTORY_POLL_MS = 5000;
+
+    async function fetchHistory() {
+        const historyBody = document.getElementById("history-body");
+        if (!historyBody) return;
+
+        try {
+            const results = await Promise.all(
+                HISTORY_TAGS.map(tag =>
+                    fetch(`${API_BASE}/api/history/${tag}`)
+                        .then(r => r.ok ? r.json() : { history: [] })
+                        .then(d => d.history.map(h => ({ ...h, tag })))
+                )
+            );
+
+            // Alle Einträge zusammenführen und nach Zeit sortieren (neueste zuerst)
+            const allEntries = results.flat()
+                .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+                .slice(0, 50);
+
+            if (allEntries.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="3" class="text-muted text-center">Noch keine Daten verfügbar</td></tr>';
+                return;
+            }
+
+            historyBody.innerHTML = allEntries.map(entry => {
+                const d = new Date(entry.timestamp);
+                const time = d.toLocaleTimeString("de-DE") + "." + String(d.getMilliseconds()).padStart(3, "0");
+                const displayName = entry.tag === "endlage_eingefahren" ? "Eingefahren" : "Ausgefahren";
+                const val = entry.value;
+                const badge = val
+                    ? '<span class="badge bg-success">AKTIV</span>'
+                    : '<span class="badge bg-secondary">INAKTIV</span>';
+                return `<tr><td class="text-muted">${time}</td><td>${displayName}</td><td>${badge}</td></tr>`;
+            }).join("");
+
+        } catch (err) {
+            console.error("Fehler beim Laden der Historie:", err);
+        }
+    }
+
+
+    // ═══════════════════════════════════════════
     // Polling starten
     // ═══════════════════════════════════════════
 
@@ -336,7 +384,25 @@ const SmartViewApp = (() => {
     }
 
     // ── Init ──────────────────────────────────
-    document.addEventListener("DOMContentLoaded", startPolling);
+    document.addEventListener("DOMContentLoaded", () => {
+        startPolling();
+
+        // Historie: beim Aufklappen laden, beim Zuklappen stoppen
+        const histCollapse = document.getElementById("history-collapse");
+        const histBtn = document.getElementById("history-toggle-btn");
+        if (histCollapse) {
+            histCollapse.addEventListener("shown.bs.collapse", () => {
+                fetchHistory();
+                historyTimer = setInterval(fetchHistory, HISTORY_POLL_MS);
+                if (histBtn) histBtn.innerHTML = '<i class="bi bi-chevron-up me-1"></i>Ausblenden';
+            });
+            histCollapse.addEventListener("hidden.bs.collapse", () => {
+                clearInterval(historyTimer);
+                historyTimer = null;
+                if (histBtn) histBtn.innerHTML = '<i class="bi bi-chevron-down me-1"></i>Anzeigen';
+            });
+        }
+    });
 
     // ── Public API ────────────────────────────
     return {
