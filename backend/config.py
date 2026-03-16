@@ -68,14 +68,14 @@ TAG_NODES = {
 
     # ─── Endlage: Zylinder eingefahren ────────────────────────
     "endlage_eingefahren": {
-        "node_id": 'ns=3;s="DB1"."xEndlage_Ausschiebezyl_Eingefahren"',
+        "node_id": 'ns=3;s="DB2"."xEndlage_Ausschiebezyl_Eingefahren"',
         "display_name": "Endlage Eingefahren",
         "type": "digital",
     },
 
     # ─── Endlage: Zylinder ausgefahren ────────────────────────
     "endlage_ausgefahren": {
-        "node_id": 'ns=3;s="DB1"."xEndlage_Ausschiebezyl_Ausgefahren"',
+        "node_id": 'ns=3;s="DB2"."xEndlage_Ausschiebezyl_Ausgefahren"',
         "display_name": "Endlage Ausgefahren",
         "type": "digital",
     },
@@ -100,21 +100,21 @@ CONTROL_NODES = {
 
     # ─── Taster Start ──────────────────────────────────────────
     "taster_start": {
-        "node_id": 'ns=3;s="DB1"."xTaster_Start"',
+        "node_id": 'ns=3;s="DB2"."xTaster_Start"',
         "display_name": "Start",
         "icon": "bi-play-circle-fill",
     },
 
     # ─── Schalter Stopp ────────────────────────────────────────
     "schalter_stopp": {
-        "node_id": 'ns=3;s="DB1"."xSchalter_Stopp"',
+        "node_id": 'ns=3;s="DB2"."xSchalter_Stopp"',
         "display_name": "Stopp",
         "icon": "bi-stop-circle-fill",
     },
 
     # ─── Taster Reset ─────────────────────────────────────────
     "taster_reset": {
-        "node_id": 'ns=3;s="DB1"."xTaster_Reset"',
+        "node_id": 'ns=3;s="DB2"."xTaster_Reset"',
         "display_name": "Reset",
         "icon": "bi-arrow-counterclockwise",
     },

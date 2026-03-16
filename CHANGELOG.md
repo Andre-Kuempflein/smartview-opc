@@ -5,6 +5,15 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.0.1] – 2026-03-16 – DB2 Migration
+
+### Geändert
+- **Node-IDs**: Alle OPC UA Node-IDs von `DB1` auf `DB2` umgestellt
+  - Grund: DB2 wurde ohne "Optimierter Bausteinzugriff" angelegt (erforderlich für OPC UA Zugriff)
+  - Betrifft: `config.py` → `TAG_NODES` und `CONTROL_NODES`
+
+---
+
 ## [2.0.0] – 2026-03-02 – Förderbandstation
 
 ### Geändert
