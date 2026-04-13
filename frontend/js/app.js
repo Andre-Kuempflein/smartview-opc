@@ -19,7 +19,7 @@ const SmartViewApp = (() => {
     // Control-spezifische Labels
     const CONTROL_LABELS = {
         taster_start: { on: "SENDET...", off: "START" },
-        taster_stopp: { on: "SENDET...", off: "STOPP" },
+        schalter_stopp: { on: "SENDET...", off: "SCHLÜSSEL" },
         taster_reset: { on: "SENDET...", off: "RESET" },
     };
 

@@ -113,7 +113,7 @@ CONTROL_NODES = {
     },
     "schalter_stopp": {
         "node_id": f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
-        "display_name": "Stopp",
+        "display_name": "Schlüsselschalter",
         "icon": "bi-stop-circle-fill",
         "pulse": False
     },
@@ -125,10 +125,10 @@ CONTROL_NODES = {
     },
 }
 
-# Tag für den Stopp-Schalter Status (Read-only)
+# Tag für den Schlüsselschalter Status (Read-only)
 TAG_NODES["schalter_stopp_status"] = {
     "node_id": f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
-    "display_name": "Not-Halt Status",
+    "display_name": "Schlüsselschalter Status",
     "type": "digital"
 }
 
