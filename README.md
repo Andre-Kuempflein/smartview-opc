@@ -87,7 +87,8 @@ smartview-opc/
 │       └── app.js        # Polling-Client + Live-Aktualisierung der Karten
 │
 ├── docs/
-│   └── SCADA.md          # Technische Dokumentation: SCADA, OPC UA, Architektur
+│   ├── SCADA.md          # Technische Dokumentation: SCADA, OPC UA, Architektur
+│   └── screenshots/      # Dashboard-Screenshots zur Dokumentation
 │
 ├── data/                 # Wird automatisch erstellt: CSV-History
 │
@@ -118,21 +119,19 @@ Die gesamte Konfiguration befindet sich in `backend/config.py`.
 
 Alle Tags befinden sich im Datenbaustein `"Richten/Automatikbetrieb_Förderbandstation_DB"` (Namespace `ns=3`).
 
-| Variable                | Node-ID (Kurzform)                               | Typ   | Lesen/Schreiben |
-|------------------------|--------------------------------------------------|-------|-----------------|
-| Endlage Eingefahren    | `..."xEndlage_Ausschiebezyl_Eingefahren"`        | Bool  | Lesen           |
-| Endlage Ausgefahren    | `..."xEndlage_Ausschiebezyl_Ausgefahren"`        | Bool  | Lesen           |
-| Sensor Magazin         | `..."xSensor_Magazin"`                           | Bool  | Lesen           |
-| Lichtschranke          | `..."xSensor_Lichtschranke"`                     | Bool  | Lesen           |
-| Förderband läuft       | `..."xFörderband"`                               | Bool  | Lesen           |
-| Zylinder Einfahren     | `..."xAusschiebezylinder_Einfahren"`             | Bool  | Lesen           |
-| Zylinder Ausfahren     | `..."xAusschiebezylinder_Ausfahren"`             | Bool  | Lesen           |
-| Lampe Start            | `..."xLampe_Start"`                              | Bool  | Lesen           |
-| Lampe Richten          | `..."xLampe_Richten"`                            | Bool  | Lesen           |
-| Systemdruck ⚠️         | `..."Druck"`                                     | Real  | Lesen           |
-| Taster Start           | `..."xTaster_Start"`                             | Bool  | **Schreiben**   |
-| Schlüsselschalter      | `..."xSchalter_Stopp"`                           | Bool  | **Schreiben**   |
-| Taster Reset           | `..."xTaster_Reset"`                             | Bool  | **Schreiben**   |
+| Variable                | Node-ID (Kurzform)                               | Typ   |
+|------------------------|--------------------------------------------------|-------|
+| Endlage Eingefahren    | `..."xEndlage_Ausschiebezyl_Eingefahren"`        | Bool  |
+| Endlage Ausgefahren    | `..."xEndlage_Ausschiebezyl_Ausgefahren"`        | Bool  |
+| Sensor Magazin         | `..."xSensor_Magazin"`                           | Bool  |
+| Lichtschranke          | `..."xSensor_Lichtschranke"`                     | Bool  |
+| Förderband läuft       | `..."xFörderband"`                               | Bool  |
+| Zylinder Einfahren     | `..."xAusschiebezylinder_Einfahren"`             | Bool  |
+| Zylinder Ausfahren     | `..."xAusschiebezylinder_Ausfahren"`             | Bool  |
+| Lampe Start            | `..."xLampe_Start"`                              | Bool  |
+| Lampe Richten          | `..."xLampe_Richten"`                            | Bool  |
+| Schlüsselschalter      | `..."xSchalter_Stopp"`                           | Bool  |
+| Systemdruck ⚠️         | `..."Druck"`                                     | Real  |
 
 > ⚠️ **Systemdruck**: Nicht funktionsfähig – defektes IO-Link-Modul (mit Lehrer abgesprochen).
 
@@ -145,12 +144,11 @@ Node-IDs können mit **UaExpert** oder im TIA Portal unter *OPC UA → Serverüb
 | Endpunkt                    | Methode | Beschreibung                                        |
 |-----------------------------|---------|-----------------------------------------------------|
 | `/`                         | GET     | Dashboard (HTML)                                    |
-| `/api/data`                 | GET     | Alle Tag-Werte + Steuerungs-Zustände + Verbindungsstatus |
+| `/api/data`                 | GET     | Alle Tag-Werte + Verbindungsstatus (JSON)           |
 | `/api/tags/<name>`          | GET     | Einzelner Tag-Wert (JSON)                           |
 | `/api/alerts`               | GET     | Aktive Grenzwert-Alarme (JSON)                      |
 | `/api/history/<tag_name>`   | GET     | In-Memory-Verlauf eines Tags (JSON)                 |
-| `/api/config`               | GET     | Tag- und Steuerungs-Konfiguration (JSON)            |
-| `/api/control/<ctrl_name>`  | POST    | Steuerungs-Signal senden (`{"value": true}`)        |
+| `/api/config`               | GET     | Tag-Konfiguration (JSON)                            |
 | `/api/download/history`     | GET     | CSV-Historiendatei herunterladen                    |
 
 ### Beispielaufrufe
@@ -161,10 +159,6 @@ curl http://localhost:5000/api/data
 
 # Einzelnen Tag abfragen
 curl http://localhost:5000/api/tags/endlage_eingefahren
-
-# Start-Taster aktivieren (Puls: True → False nach 300ms)
-curl -X POST -H "Content-Type: application/json" \
-     -d '{"value": true}' http://localhost:5000/api/control/taster_start
 
 # Verlauf der Endlage abrufen
 curl http://localhost:5000/api/history/endlage_eingefahren
@@ -231,17 +225,14 @@ sudo systemctl status smartview
 
 ### Förderbandstation (v2.x)
 
-- [x] OPC UA Client mit 9 digitalen Lesevariablen (Endlagen, Sensoren, Aktoren, Lampen)
-- [x] OPC UA Schreibzugriff für 3 Steuervariablen (Start, Schlüsselschalter, Reset)
-- [x] Puls-Logik für Taster (True → 300ms → False automatisch)
-- [x] REST API: `GET /api/data`, `POST /api/control/<name>`
+- [x] OPC UA Client mit 10 digitalen Lesevariablen (Endlagen, Sensoren, Aktoren, Lampen, Schlüsselschalter)
+- [x] REST API: `GET /api/data`, `GET /api/history/<tag>`, `GET /api/download/history`
 - [x] Webdashboard mit Live-Status-LEDs (Polling alle 1,5 Sekunden)
 - [x] Aufklappbare Historietabelle (letzte 50 Statusänderungen)
 - [x] CSV-Download der Historiedaten
 - [x] Demo-Modus für Entwicklung ohne SPS
 - [x] Automatischer Reconnect bei OPC-Verbindungsverlust
 - [x] Fehlermeldungen als Toast-Benachrichtigung im Browser
-- [x] Steuerungs-Buttons werden bei Verbindungstrennung deaktiviert
 
 ### Bekannte Einschränkungen
 
