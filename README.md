@@ -95,7 +95,9 @@ smartview-opc/
 ├── Dockerfile            # Container-Image Definition
 ├── docker-compose.yml    # Container-Deployment
 ├── CHANGELOG.md          # Versionshistorie
-└── README.md             # Diese Datei
+├── README.md             # Diese Datei
+├── .ssh_connect.py       # Hilfsskript: SSH-Verbindung zum Raspberry Pi (paramiko)
+└── .ssh_pass.bat         # Hilfsskript: gibt das SSH-Passwort für die Verbindung aus
 ```
 
 ---
