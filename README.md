@@ -259,13 +259,6 @@ Das Dashboard zeigt von oben nach unten:
 
 ---
 
-### Detailansicht – Endlagen & Sensoren
-
-![Endlagen und Sensoren](docs/screenshots/01_dashboard_gesamt.png)
-
-Gut erkennbar: Die **grünen LED-Indikatoren** (AKTIV) zeigen in Echtzeit den Zustand der Endlagen und Sensoren.
-
----
 
 ### Alarm-Benachrichtigung
 
