@@ -111,11 +111,11 @@ CONTROL_NODES = {
         "icon": "bi-play-circle-fill",
         "pulse": True # Sende Puls (True -> False)
     },
-    "taster_stopp": {
-        "node_id": f'ns=3;s={DB_PATH}."xTaster_Stopp"',
+    "schalter_stopp": {
+        "node_id": f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
         "display_name": "Stopp",
         "icon": "bi-stop-circle-fill",
-        "pulse": True # Sende Puls
+        "pulse": False
     },
     "taster_reset": {
         "node_id": f'ns=3;s={DB_PATH}."xTaster_Reset"',
