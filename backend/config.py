@@ -32,9 +32,8 @@ MODE = os.environ.get('OPC_MODE', 'polling')
 # VARIABLEN (TAGS) DER SPS (S7-1500)
 # ============================================================
 
-# Pfad zum Datenbaustein DB2 in der SPS (TIA Portal Namenskonvention)
-# DB2 wurde angelegt, da DB1 optimierten Zugriff hatte und OPC UA nicht zuließ
-DB_PATH = '"DB2"'
+# Pfad zum Datenbaustein DB1 in der SPS (TIA Portal Namenskonvention)
+DB_PATH = '"Richten/Automatikbetrieb_Förderbandstation_DB"'
 
 TAG_NODES = {
     # ─── Endlagen (Zylinder) ──────────────────────────────────
