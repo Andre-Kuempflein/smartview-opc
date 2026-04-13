@@ -1,161 +1,213 @@
 # -*- coding: utf-8 -*-
 """
-KONFIGURATION – SmartView OPC
-Aktualisiert für die Förderbandstation (DB1)
+SmartView OPC – Zentrale Konfiguration
+=======================================
+Alle Einstellungen des Systems befinden sich in dieser Datei.
+
+Hier werden festgelegt:
+  - OPC UA Verbindung zur Siemens S7-1500
+  - Welche Variablen (Tags) von der SPS gelesen werden
+  - Welche Variablen auf die SPS geschrieben werden können (Steuerung)
+  - Webserver-Einstellungen
+  - CSV-Historisierungseinstellungen
+
+Umgebungsvariablen überschreiben die Standardwerte (nützlich für Docker/Deployment).
 """
 
 import os
+import os.path
 
-# ============================================================
+# ════════════════════════════════════════════════════════════════════════════
 # ALLGEMEINE EINSTELLUNGEN
-# ============================================================
+# ════════════════════════════════════════════════════════════════════════════
 
-# DEMO-Modus: Wenn True, werden Werte nur simuliert (nützlich für Entwicklung ohne echte SPS).
-# In der Produktion sollte dies auf 'False' gesetzt werden.
+# Demo-Modus: Wenn True, werden Werte nur simuliert – keine echte SPS nötig.
+# Nützlich für Entwicklung oder Präsentation ohne Anlagenanbindung.
+# Aktivieren mit: export DEMO_MODE=true (Linux) oder set DEMO_MODE=true (Windows)
 DEMO_MODE = os.environ.get('DEMO_MODE', 'false').lower() == 'true'
 
-# OPC UA Verbindung: Adresse der Siemens S7-1516 SPS.
-# Standardmäßig Port 4840. Beispiel: opc.tcp://192.168.6.12:4840
+# OPC UA Verbindungsadresse der Siemens S7-1500 SPS.
+# Format: opc.tcp://<IP-Adresse>:<Port>
+# Standardport für OPC UA: 4840
 OPC_UA_ENDPOINT = os.environ.get(
     'OPC_UA_ENDPOINT',
     'opc.tcp://192.168.6.12:4840'
 )
 
-# Abrufintervall: Wie oft (in Millisekunden) fragt das Backend die SPS nach neuen Werten?
-# Standard: 1000ms (jede Sekunde).
+# Polling-Intervall: Wie oft (in Millisekunden) werden neue Werte von der SPS abgerufen?
+# 1000ms = jede Sekunde. Kleinere Werte erhöhen die Aktualität, belasten aber das Netzwerk.
 POLLING_INTERVAL_MS = int(os.environ.get('POLLING_INTERVAL_MS', '1000'))
 
-# Modus: 'polling' (Backend fragt an) oder 'subscription' (SPS sendet aktiv bei Änderungen).
+# Betriebsmodus des OPC UA Clients:
+#   'polling'      → Raspberry Pi fragt die SPS aktiv an (Standard, einfacher)
+#   'subscription' → SPS sendet Werte aktiv bei Änderung (effizienter, aber komplexer)
 MODE = os.environ.get('OPC_MODE', 'polling')
 
-# ============================================================
-# VARIABLEN (TAGS) DER SPS (S7-1500)
-# ============================================================
+# ════════════════════════════════════════════════════════════════════════════
+# VARIABLEN-DEFINITIONEN (TAGS)
+# ════════════════════════════════════════════════════════════════════════════
 
-# Pfad zum Datenbaustein DB1 in der SPS (TIA Portal Namenskonvention)
+# Datenbaustein-Pfad in der SPS (TIA Portal Namenskonvention).
+# Alle Variablen der Förderbandstation befinden sich in diesem Baustein.
 DB_PATH = '"Richten/Automatikbetrieb_Förderbandstation_DB"'
 
+# TAG_NODES: Variablen die nur GELESEN werden (Sensoren, Status, Messwerte)
+# Aufbau jedes Eintrags:
+#   node_id:      eindeutige Adresse der Variable im OPC UA Server
+#   display_name: Anzeigename im Dashboard
+#   type:         "digital" (Bool: Ein/Aus) oder "analog" (Zahl mit Einheit)
+#   unit:         Einheit für Analogwerte (z.B. "bar", "°C")
+#   min_alert:    Alarm wenn Wert UNTER diesem Grenzwert liegt
+#   max_alert:    Alarm wenn Wert ÜBER diesem Grenzwert liegt
 TAG_NODES = {
-    # ─── Endlagen (Zylinder) ──────────────────────────────────
+
+    # ── Endlagen des Ausschiebe-Zylinders ────────────────────────────────
+    # Zeigen an ob der Zylinder vollständig ein- oder ausgefahren ist.
     "endlage_eingefahren": {
-        "node_id": f'ns=3;s={DB_PATH}."xEndlage_Ausschiebezyl_Eingefahren"',
+        "node_id":      f'ns=3;s={DB_PATH}."xEndlage_Ausschiebezyl_Eingefahren"',
         "display_name": "Endlage Eingefahren",
-        "type": "digital",
+        "type":         "digital",
     },
     "endlage_ausgefahren": {
-        "node_id": f'ns=3;s={DB_PATH}."xEndlage_Ausschiebezyl_Ausgefahren"',
+        "node_id":      f'ns=3;s={DB_PATH}."xEndlage_Ausschiebezyl_Ausgefahren"',
         "display_name": "Endlage Ausgefahren",
-        "type": "digital",
+        "type":         "digital",
     },
 
-    # ─── Sensoren ──────────────────────────────────────────────
+    # ── Sensoren ──────────────────────────────────────────────────────────
+    # Magazin-Sensor: True wenn Werkstücke im Magazin vorhanden sind.
     "sensor_magazin": {
-        "node_id": f'ns=3;s={DB_PATH}."xSensor_Magazin"',
+        "node_id":      f'ns=3;s={DB_PATH}."xSensor_Magazin"',
         "display_name": "Sensor Magazin",
-        "type": "digital",
+        "type":         "digital",
     },
+    # Lichtschranke am Bandende: True wenn der Strahl unterbrochen ist (Werkstück erkannt).
     "sensor_lichtschranke": {
-        "node_id": f'ns=3;s={DB_PATH}."xSensor_Lichtschranke"',
+        "node_id":      f'ns=3;s={DB_PATH}."xSensor_Lichtschranke"',
         "display_name": "Lichtschranke Bandende",
-        "type": "digital",
+        "type":         "digital",
     },
 
-    # ─── Aktoren Status ────────────────────────────────────────
+    # ── Status der Aktoren (Rückmeldung von der SPS) ──────────────────────
+    # Zeigen an ob das Förderband läuft bzw. der Zylinder aktiv ist.
     "foerderband_status": {
-        "node_id": f'ns=3;s={DB_PATH}."xFörderband"',
+        "node_id":      f'ns=3;s={DB_PATH}."xFörderband"',
         "display_name": "Förderband läuft",
-        "type": "digital",
+        "type":         "digital",
     },
     "zylinder_einfahren": {
-        "node_id": f'ns=3;s={DB_PATH}."xAusschiebezylinder_Einfahren"',
+        "node_id":      f'ns=3;s={DB_PATH}."xAusschiebezylinder_Einfahren"',
         "display_name": "Zylinder Einfahren",
-        "type": "digital",
+        "type":         "digital",
     },
     "zylinder_ausfahren": {
-        "node_id": f'ns=3;s={DB_PATH}."xAusschiebezylinder_Ausfahren"',
+        "node_id":      f'ns=3;s={DB_PATH}."xAusschiebezylinder_Ausfahren"',
         "display_name": "Zylinder Ausfahren",
-        "type": "digital",
+        "type":         "digital",
     },
 
-    # ─── Lampen ────────────────────────────────────────────────
+    # ── Signallampen ──────────────────────────────────────────────────────
+    # Zeigen den aktuellen Betriebszustand an (wird von der SPS gesetzt).
     "lampe_start": {
-        "node_id": f'ns=3;s={DB_PATH}."xLampe_Start"',
+        "node_id":      f'ns=3;s={DB_PATH}."xLampe_Start"',
         "display_name": "Lampe Start",
-        "type": "digital",
+        "type":         "digital",
     },
     "lampe_richten": {
-        "node_id": f'ns=3;s={DB_PATH}."xLampe_Richten"',
+        "node_id":      f'ns=3;s={DB_PATH}."xLampe_Richten"',
         "display_name": "Lampe Richten",
-        "type": "digital",
+        "type":         "digital",
     },
 
-    # ─── Analogwerte ───────────────────────────────────────────
+    # ── Analogwert ────────────────────────────────────────────────────────
+    # HINWEIS: Nicht funktionsfähig – das IO-Link-Modul ist defekt.
+    # Mit Lehrer abgesprochen und freigegeben (siehe CHANGELOG.md v2.2.0).
     "druck": {
-        "node_id": f'ns=3;s={DB_PATH}."Druck"',
+        "node_id":      f'ns=3;s={DB_PATH}."Druck"',
         "display_name": "Systemdruck",
-        "type": "analog",
-        "unit": "bar",
-        "min_alert": 2.0,
-        "max_alert": 8.0
+        "type":         "analog",
+        "unit":         "bar",
+        "min_alert":    2.0,   # Alarm wenn Druck unter 2 bar fällt
+        "max_alert":    8.0,   # Alarm wenn Druck über 8 bar steigt
     },
 }
 
-# ┌─────────────────────────────────────────────────────────────┐
-# │  5. STEUERBARE AUSGÄNGE (SCHREIBEN AUF DIE SPS)             │
-# └─────────────────────────────────────────────────────────────┘
-
-CONTROL_NODES = {
-    "taster_start": {
-        "node_id": f'ns=3;s={DB_PATH}."xTaster_Start"',
-        "display_name": "Start",
-        "icon": "bi-play-circle-fill",
-        "pulse": True # Sende Puls (True -> False)
-    },
-    "schalter_stopp": {
-        "node_id": f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
-        "display_name": "Schlüsselschalter",
-        "icon": "bi-stop-circle-fill",
-        "pulse": False
-    },
-    "taster_reset": {
-        "node_id": f'ns=3;s={DB_PATH}."xTaster_Reset"',
-        "display_name": "Reset",
-        "icon": "bi-arrow-counterclockwise",
-        "pulse": True # Sende Puls
-    },
-}
-
-# Tag für den Schlüsselschalter Status (Read-only)
+# ── Schlüsselschalter als Lese-Tag zusätzlich verfügbar machen ─────────────
+# Damit sein Status im Dashboard als Indikator angezeigt werden kann
+# (zusätzlich zur Steuerung über CONTROL_NODES).
 TAG_NODES["schalter_stopp_status"] = {
-    "node_id": f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
+    "node_id":      f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
     "display_name": "Schlüsselschalter Status",
-    "type": "digital"
+    "type":         "digital",
 }
 
-# ============================================================
-# WEBSERVER & FLASK KONFIGURATION
-# ============================================================
+# ════════════════════════════════════════════════════════════════════════════
+# STEUERBARE AUSGÄNGE (SCHREIBEN AUF DIE SPS)
+# ════════════════════════════════════════════════════════════════════════════
 
-# Der Host des Webservers. '0.0.0.0' bedeutet, er lauscht im gesamten Netzwerk.
+# CONTROL_NODES: Variablen die GESCHRIEBEN werden können (Taster, Schalter)
+# Aufbau jedes Eintrags:
+#   node_id:      Adresse der Variable im OPC UA Server
+#   display_name: Anzeigename im Dashboard
+#   icon:         Bootstrap-Icon für den Button (https://icons.getbootstrap.com)
+#   pulse:        True  = Puls-Taster (schreibt True, dann nach 300ms automatisch False)
+#                 False = Toggle-Schalter (hält den gesetzten Wert)
+CONTROL_NODES = {
+
+    # Start-Taster: Puls – löst eine steigende Flanke in der SPS aus.
+    # Die SPS erkennt den Flankenwechsel (R_TRIG) und startet die Sequenz.
+    "taster_start": {
+        "node_id":      f'ns=3;s={DB_PATH}."xTaster_Start"',
+        "display_name": "Start",
+        "icon":         "bi-play-circle-fill",
+        "pulse":        True,
+    },
+
+    # Schlüsselschalter: Toggle – bleibt auf dem gesetzten Wert.
+    # True = Anlage freigegeben, False = Anlage gesperrt.
+    "schalter_stopp": {
+        "node_id":      f'ns=3;s={DB_PATH}."xSchalter_Stopp"',
+        "display_name": "Schlüsselschalter",
+        "icon":         "bi-stop-circle-fill",
+        "pulse":        False,
+    },
+
+    # Reset-Taster: Puls – fährt den Zylinder zurück in die Grundstellung.
+    "taster_reset": {
+        "node_id":      f'ns=3;s={DB_PATH}."xTaster_Reset"',
+        "display_name": "Reset",
+        "icon":         "bi-arrow-counterclockwise",
+        "pulse":        True,
+    },
+}
+
+# ════════════════════════════════════════════════════════════════════════════
+# WEBSERVER-KONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════
+
+# Host: '0.0.0.0' bedeutet der Server ist im gesamten Netzwerk erreichbar.
+# Zum Einschränken auf lokalen Zugriff: '127.0.0.1'
 FLASK_HOST = os.environ.get('FLASK_HOST', '0.0.0.0')
 
-# Der Port des Webservers (Standard: 5000 -> erreichbar über http://IP:5000)
+# Port: Das Dashboard ist erreichbar unter http://<IP>:5000
 FLASK_PORT = int(os.environ.get('FLASK_PORT', '5000'))
 
-# Maximale Anzahl an Einträgen, die im RAM (Arbeitsspeicher) für die Live-Historie-Tabelle gehalten werden.
+# Maximale Anzahl an Verlaufswerten die pro Tag im RAM gehalten werden.
+# Ältere Werte werden automatisch gelöscht (FIFO-Prinzip).
 HISTORY_MAX_LENGTH = int(os.environ.get('HISTORY_MAX_LENGTH', '500'))
 
-# ============================================================
-# DAUERHAFTE CSV-HISTORISIERUNG
-# ============================================================
+# ════════════════════════════════════════════════════════════════════════════
+# CSV-HISTORISIERUNG
+# ════════════════════════════════════════════════════════════════════════════
 
-# CSV History Logging aktivieren/deaktivieren (Speichert Werte in einer Datei)
+# CSV-Logging aktivieren oder deaktivieren.
 HISTORY_ENABLED = os.environ.get('HISTORY_ENABLED', 'true').lower() == 'true'
 
-# Intervall: Wie oft (in Sekunden) wird eine neue Zeile in die CSV geschrieben?
+# Wie oft (in Sekunden) wird eine neue Zeile in die CSV-Datei geschrieben?
+# 5 = alle 5 Sekunden ein neuer Datensatz.
 HISTORY_INTERVAL_S = int(os.environ.get('HISTORY_INTERVAL_S', '5'))
 
-# Speicherpfad der CSV-Datei (wird relativ zum Hauptverzeichnis des Projekts im Ordner 'data/' abgelegt)
-import os.path
+# Pfad zur CSV-Datei (relativ zum Projektstamm-Verzeichnis).
+# Wird automatisch erstellt wenn noch nicht vorhanden.
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 HISTORY_FILE = os.path.join(PROJECT_ROOT, "data", "history.csv")

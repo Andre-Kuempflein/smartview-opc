@@ -1,15 +1,16 @@
-# SCADA-Recherche – SmartView OPC
+# SCADA-Dokumentation – SmartView OPC
 
 ## Was ist SCADA?
 
-**SCADA** steht für **Supervisory Control and Data Acquisition** (Überwachung, Steuerung und Datenerfassung). Es handelt sich um eine Klasse von Softwaresystemen, die in der Automatisierungstechnik und Industrie eingesetzt werden, um Maschinen, Anlagen und Prozesse zu überwachen und zu steuern.
+**SCADA** steht für **Supervisory Control and Data Acquisition** (Überwachung, Steuerung und Datenerfassung).
+Es handelt sich um eine Klasse von Softwaresystemen, die in der Automatisierungstechnik eingesetzt werden,
+um Maschinen, Anlagen und Prozesse zu überwachen und zu steuern.
 
 Typische Einsatzgebiete:
-- Energieversorgung (Strom, Gas, Wasser)
 - Fertigungsanlagen (Automotive, Chemie, Lebensmittel)
+- Energieversorgung (Strom, Gas, Wasser)
 - Gebäudeautomation
 - Wasseraufbereitung / Kläranlagen
-- Öl- und Gasleitungen
 
 ---
 
@@ -19,29 +20,29 @@ Typische Einsatzgebiete:
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Feldbusebene (Field Level)                   │
 │                                                                     │
-│   Sensoren          Aktoren          Messtechnik                    │
-│   (Temp., Druck,    (Pumpen,         (Durchfluss,                  │
-│    Füllstand)        Ventile)         Energie)                      │
-│        │                 │                 │                        │
-│        └─────────────────┼─────────────────┘                       │
-│                          │ PROFINET / PROFIBUS                      │
-└──────────────────────────┼──────────────────────────────────────────┘
-                           │
-                           ▼
+│   Sensoren                  Aktoren               Messtechnik       │
+│   (Endlagen, Magazin,       (Förderband,           (IO-Link ⚠️)     │
+│    Lichtschranke)            Zylinder)                              │
+│        │                        │                      │            │
+│        └────────────────────────┼──────────────────────┘            │
+│                                 │ PROFINET                          │
+└─────────────────────────────────┼───────────────────────────────────┘
+                                  │
+                                  ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                    Steuerungsebene (Control Level)                   │
 │                                                                      │
 │              ┌──────────────────────────────┐                       │
-│              │    Siemens S7-1516 (SPS)     │                       │
+│              │    Siemens S7-1500 (SPS)     │                       │
 │              │                              │                       │
 │              │  - Verarbeitet Sensordaten   │                       │
 │              │  - Steuert Aktoren           │                       │
 │              │  - OPC UA Server (Port 4840) │                       │
-│              │  - Taktzeit: 10–100 ms       │                       │
+│              │  - IP: 192.168.6.12          │                       │
 │              └──────────────┬───────────────┘                       │
 └─────────────────────────────┼────────────────────────────────────────┘
                               │ OPC UA (IEC 62541)
-                              │ opc.tcp://192.168.x.x:4840
+                              │ opc.tcp://192.168.6.12:4840
                               │
                               ▼
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -53,31 +54,32 @@ Typische Einsatzgebiete:
 │         │  opc_client.py                          │                 │
 │         │  ┌─────────────────────────────────┐    │                 │
 │         │  │ OPC UA Client (Polling 1s)       │    │                 │
-│         │  │ - Liest Tags von S7-1516         │    │                 │
+│         │  │ - Liest Tags von S7-1500         │    │                 │
 │         │  │ - Speichert in Cache (dict)      │    │                 │
 │         │  │ - Erkennt Alarme                 │    │                 │
 │         │  │ - Reconnect bei Verbindungsverlust│   │                 │
+│         │  │ - Schreibt Steuersignale (OPC)   │    │                 │
 │         │  └──────────────┬──────────────────┘    │                 │
 │         │                 │                        │                 │
-│         │  app.py (Flask) │                        │                 │
+│         │  app.py (Flask REST API)                 │                 │
 │         │  ┌──────────────┴───────────────────┐    │                 │
-│         │  │ REST API                          │    │                 │
-│         │  │  GET /api/tags     → JSON         │    │                 │
-│         │  │  GET /api/tags/<n> → JSON         │    │                 │
-│         │  │  GET /api/status   → JSON         │    │                 │
-│         │  │  GET /api/alarms   → JSON         │    │                 │
-│         │  │  GET /api/history  → JSON         │    │                 │
-│         │  │  GET /api/stream   → SSE Stream   │    │                 │
+│         │  │ GET  /api/data        → JSON      │    │                 │
+│         │  │ GET  /api/tags/<n>    → JSON      │    │                 │
+│         │  │ GET  /api/alerts      → JSON      │    │                 │
+│         │  │ GET  /api/history/<n> → JSON      │    │                 │
+│         │  │ GET  /api/config      → JSON      │    │                 │
+│         │  │ POST /api/control/<n> → Schreiben │    │                 │
+│         │  │ GET  /api/download/history → CSV  │    │                 │
 │         │  └──────────────────────────────────┘    │                 │
 │         │                                          │                 │
 │         │  history.py (CSV-Logger)                 │                 │
 │         │  ┌─────────────────────────────────┐     │                 │
-│         │  │ Schreibt alle 60s → data/history │     │                 │
+│         │  │ Schreibt alle 5s → data/history  │     │                 │
 │         │  └─────────────────────────────────┘     │                 │
 │         └──────────────────────┬──────────────────┘                 │
 └────────────────────────────────┼────────────────────────────────────┘
-                                 │ HTTP / SSE (Port 5000)
-                                 │
+                                 │ HTTP (Port 5000)
+                                 │ Polling alle 1,5 Sekunden
                                  ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                    Visualisierungsebene (HMI Level)                  │
@@ -86,13 +88,16 @@ Typische Einsatzgebiete:
 │   │  Browser (PC)    │    │  Browser (Tablet)    │                   │
 │   │  HTML5 Dashboard │    │  Responsive Layout   │                   │
 │   │  Bootstrap 5     │    │  Bootstrap 5         │                   │
-│   │  SSE Live-Update │    │  SSE Live-Update     │                   │
+│   │  Polling (fetch) │    │  Polling (fetch)     │                   │
 │   └──────────────────┘    └─────────────────────┘                   │
 │                                                                      │
-│   Visualisiert: Analogwerte (Balken), Digitalwerte (EIN/AUS),       │
-│   Alarme (blinkendes Banner), History (Tabelle)                     │
+│   Visualisiert: Digitalwerte (LED-Indikatoren), Alarme (Banner),    │
+│   Historietabelle, CSV-Download                                     │
 └──────────────────────────────────────────────────────────────────────┘
 ```
+
+> ⚠️ **Systemdruck (Analogwert)**: Aufgrund eines defekten IO-Link-Moduls nicht in Betrieb.
+> Mit Lehrer abgesprochen und freigegeben.
 
 ---
 
@@ -100,16 +105,18 @@ Typische Einsatzgebiete:
 
 ### Was ist OPC UA?
 
-OPC UA (IEC 62541) ist ein industrieller Kommunikationsstandard für die **sichere, plattformunabhängige Datenübertragung** zwischen Feldgeräten, Steuerungen und IT-Systemen.
+OPC UA (IEC 62541) ist ein industrieller Kommunikationsstandard für die
+**sichere, plattformunabhängige Datenübertragung** zwischen Feldgeräten, Steuerungen und IT-Systemen.
 
 **Vorteile gegenüber älteren Protokollen (Modbus, OPC DA):**
-| Merkmal          | OPC Classic / Modbus | OPC UA         |
-|------------------|----------------------|----------------|
-| Plattform        | Windows only         | Cross-Platform |
+
+| Merkmal          | OPC Classic / Modbus | OPC UA           |
+|------------------|----------------------|------------------|
+| Plattform        | Windows only         | Cross-Platform   |
 | Sicherheit       | Keine / DCOM         | TLS, Zertifikate |
 | Datenmodell      | Flach                | Hierarchisch, typisiert |
 | Entdeckung       | Manuell              | Discovery-Dienst |
-| Standard         | Proprietär           | IEC 62541      |
+| Standard         | Proprietär           | IEC 62541        |
 
 ### Transport-Schicht
 
@@ -117,81 +124,96 @@ In SmartView OPC wird das **Binary TCP** Protokoll genutzt:
 ```
 opc.tcp://<IP>:<Port>
 ```
-
-Standardport: **4840** (kann in TIA Portal konfiguriert werden)
+Standardport: **4840**
 
 ### Sicherheitsmodi
 
-| Modus              | Beschreibung                              | Einsatz         |
-|-------------------|-------------------------------------------|-----------------|
-| `None`             | Keine Verschlüsselung, keine Signierung   | Geschlossenes Intranet |
-| `Sign`             | Signierung, keine Verschlüsselung         | Intranet        |
-| `SignAndEncrypt`   | Signierung + AES-256 Verschlüsselung      | Produktiv / WAN |
+| Modus            | Beschreibung                              | Einsatz                 |
+|-----------------|-------------------------------------------|-------------------------|
+| `None`           | Keine Verschlüsselung, keine Signierung   | Geschlossenes Intranet  |
+| `Sign`           | Signierung, keine Verschlüsselung         | Intranet                |
+| `SignAndEncrypt` | Signierung + AES-256 Verschlüsselung      | Produktiv / WAN         |
 
-SmartView OPC unterstützt `NoSecurity` und `Basic256Sha256` (konfigurierbar in `config.py`).
+SmartView OPC nutzt `None` (kein Passwort, kein Zertifikat) – geeignet für abgeschlossene Schulnetzwerke.
 
 ---
 
 ## Datenfluss: Von der SPS zum Browser
 
 ```
-SPS (S7-1516)           Raspberry Pi 4B              Browser
+SPS (S7-1500)           Raspberry Pi 4B              Browser
      │                        │                          │
-     │  OPC UA Read           │                          │
-     │ ◄──────────────────── │  opc_client._poll_loop() │
-     │  value=85.3°C          │                          │
-     │ ──────────────────────►│  data_cache["temp"]=85.3 │
+     │  OPC UA Read (1s)      │                          │
+     │◄──────────────────────│  opc_client._poll_loop() │
+     │  xEndlage = True       │                          │
+     │──────────────────────►│  _values["endlage"]=True │
      │                        │                          │
-     │                        │  SSE /api/stream         │
-     │                        │ ─────────────────────────►
-     │                        │  data: {"tags":{...}}    │
-     │                        │                          │
-     │                        │   EventSource.onmessage()│
-     │                        │  ◄─────────────────────  │
-     │                        │   renderAnalogCard()     │
-     │                        │   → Fortschrittsbalken   │
-     │                        │     wird aktualisiert    │
+     │                        │  HTTP GET /api/data      │
+     │                        │◄─────────────────────────│
+     │                        │  {"tags":{...}}          │
+     │                        │─────────────────────────►│
+     │                        │                          │  setInterval(1500ms)
+     │                        │                          │  → updateDigitalCard()
+     │                        │                          │  → LED grün/rot
 ```
 
-Latenz: SPS-Zyklus (10ms) + OPC UA Polling (1000ms) + SSE (sofort) ≈ **~1 Sekunde**
+**Latenz:** OPC UA Polling (1000ms) + HTTP Polling Browser (1500ms) ≈ **ca. 1–2 Sekunden**
+
+### Steuerungs-Datenfluss (Schreiben)
+
+```
+Browser                  Raspberry Pi 4B          SPS (S7-1500)
+   │                           │                        │
+   │  POST /api/control/       │                        │
+   │  taster_start             │                        │
+   │  {"value": true}          │                        │
+   │──────────────────────────►│                        │
+   │                           │  OPC UA Write: True    │
+   │                           │───────────────────────►│
+   │  {"success": true}        │  Warte 300ms           │  → R_TRIG erkennt
+   │◄──────────────────────────│  OPC UA Write: False   │    steigende Flanke
+   │                           │───────────────────────►│  → Sequenz startet
+```
 
 ---
 
-## Siemens S7-1516 – OPC UA Konfiguration
+## Siemens S7-1500 – OPC UA Konfiguration
 
 ### TIA Portal Einstellungen
 
-1. **Gerätekonfiguration öffnen** → CPU S7-1516 auswählen
+1. **Gerätekonfiguration öffnen** → CPU S7-1500 auswählen
 2. **Eigenschaften → Allgemein → OPC UA** öffnen
 3. **"OPC UA Server aktivieren"** ankreuzen
-4. **Port**: Standard 4840 (oder anpassen)
-5. **Sicherheit**: "Keine Sicherheit" oder Zertifikat auswählen
-6. **DB-Variablen für OPC UA freigeben**: Rechtsklick auf Variable → "OPC UA Zugriff: Lesen"
+4. **Port**: Standard 4840
+5. **Sicherheit**: "Keine Sicherheit" (für Schulnetz ausreichend)
+6. **DB-Variablen für OPC UA freigeben**: DB-Eigenschaften → Attribute → "Schreibzugriff über OPC UA"
 
-### Node-ID Format (S7-1516)
+### Node-ID Format (S7-1500)
 
 ```
 ns=3;s="Datenbaustein"."Variablenname"
 ```
 
-Beispiele:
-| Beschreibung        | Node-ID                                    |
-|--------------------|--------------------------------------------|
-| Kesseltemperatur   | `ns=3;s="DB_Prozess"."Temperatur_Kessel"`  |
-| Pumpe 1 Lauf       | `ns=3;s="DB_Prozess"."Pumpe1_Lauf"`        |
-| Druck Leitung      | `ns=3;s="DB_Prozess"."Druck_Leitung"`      |
+Beispiele für die Förderbandstation:
 
-**Werkzeug zur Node-ID Ermittlung:** [Unified Automation UaExpert](https://www.unified-automation.com/products/development-tools/uaexpert.html) (kostenlos, Windows/Linux)
+| Beschreibung        | Node-ID                                                                          |
+|--------------------|----------------------------------------------------------------------------------|
+| Endlage Eingefahren | `ns=3;s="Richten/Automatikbetrieb_Förderbandstation_DB"."xEndlage_Ausschiebezyl_Eingefahren"` |
+| Taster Start        | `ns=3;s="Richten/Automatikbetrieb_Förderbandstation_DB"."xTaster_Start"`        |
+| Systemdruck ⚠️     | `ns=3;s="Richten/Automatikbetrieb_Förderbandstation_DB"."Druck"`                |
+
+**Werkzeug zur Node-ID Ermittlung:** [Unified Automation UaExpert](https://www.unified-automation.com/products/development-tools/uaexpert.html) (kostenlos)
 
 ---
 
 ## Verwendete Python-Bibliotheken
 
-| Bibliothek | Version | Zweck |
-|-----------|---------|-------|
-| `opcua`   | 0.98.13 | OPC UA Client (synchron, S7-kompatibel) |
-| `flask`   | 3.0.3   | Web-Framework für REST API + SSE |
-| `gunicorn`| 22.0.0  | Produktiv-WSGI-Server für Raspberry Pi |
+| Bibliothek     | Version  | Zweck                                              |
+|---------------|----------|----------------------------------------------------|
+| `opcua`       | 0.98.13  | OPC UA Client (synchron, S7-kompatibel)            |
+| `flask`       | 3.0.3    | Web-Framework für REST API                         |
+| `flask-cors`  | 4.0.0    | CORS-Header für Browser-Zugriff                    |
+| `gunicorn`    | 22.0.0   | Produktiv-WSGI-Server für Raspberry Pi             |
 
 ---
 
@@ -203,11 +225,11 @@ SmartView OPC implementiert die **Datenerfassungsschicht** der Industrie-4.0-Ref
 ┌─────────────────────────────────────────────┐
 │  Unternehmensebene (ERP, MES, Cloud)        │ ← Nicht Teil dieses Projekts
 ├─────────────────────────────────────────────┤
-│  Edge-/SCADA-Ebene                         │ ← SmartView OPC (Raspberry Pi)
+│  Edge-/SCADA-Ebene                          │ ← SmartView OPC (Raspberry Pi)
 ├─────────────────────────────────────────────┤
-│  Steuerungsebene (SPS)                      │ ← Siemens S7-1516
+│  Steuerungsebene (SPS)                      │ ← Siemens S7-1500
 ├─────────────────────────────────────────────┤
-│  Feldebene (Sensoren, Aktoren)              │ ← Physische Anlage
+│  Feldebene (Sensoren, Aktoren)              │ ← Physische Förderbandstation
 └─────────────────────────────────────────────┘
 ```
 
