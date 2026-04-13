@@ -264,7 +264,35 @@ Das Dashboard zeigt von oben nach unten:
 ![Endlagen und Sensoren](docs/screenshots/01_dashboard_gesamt.png)
 
 Gut erkennbar: Die **grünen LED-Indikatoren** (AKTIV) zeigen in Echtzeit den Zustand der Endlagen und Sensoren.
-Jeder Tag-Wert hat ein Qualitäts-Badge (`good` / `bad`) – bei OPC-Verbindungsproblemen wird dies sofort sichtbar.
+
+---
+
+### Alarm-Benachrichtigung
+
+![Alarm-Benachrichtigung](docs/screenshots/05_alarmbenachrichtigung.png)
+
+Der **Alarm-Banner** erscheint automatisch, sobald ein Grenzwert über- oder unterschritten wird. Die rote Zahl zeigt die Anzahl aktiver Alarme. Im Beispiel: Systemdruck liegt bei 0 bar – Minimum ist 2.0 bar (defektes IO-Link-Modul).
+
+---
+
+### Statusleuchte – LED-Indikator
+
+![Statusleuchte](docs/screenshots/06_statusleuchte.png)
+
+Jede Variable wird als **LED-Kreis** dargestellt:
+- **Grün leuchtend + „AKTIV"** → Signal ist `True` (z. B. Endlage erreicht, Sensor ausgelöst)
+- **Grau + „INAKTIV"** → Signal ist `False`
+- Unten links: Zeitstempel der letzten Aktualisierung
+
+---
+
+### Qualitäts-Badge (GOOD / BAD)
+
+![Qualitäts-Badge](docs/screenshots/07_verbindungsstatus.png)
+
+Das Badge oben rechts in jeder Karte zeigt die **OPC UA Datenqualität**:
+- **GOOD** (grün) → Wert wurde erfolgreich von der SPS gelesen
+- **BAD** (rot) → Verbindungsproblem oder ungültiger Wert
 
 ---
 
