@@ -5,6 +5,20 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.2.0] – 2026-04-13 – Steuerungsoptimierung & Bekannte Einschränkungen
+
+### Geändert
+- **Steuerung**: Puls-Buttons senden jetzt immer `True` (keine Toggle-Logik mehr)
+- **Backend**: Puls-Reset läuft im Hintergrund-Thread (kein Flask-Blocking mehr)
+- **Frontend**: Steuerungs-Buttons werden bei OPC-Verbindungsverlust automatisch deaktiviert
+- **Frontend**: Fehlermeldungen werden als roter Toast angezeigt statt nur kurz aufzublitzen
+- **Frontend**: Bedienung-Sektion aus dem Dashboard entfernt
+
+### Bekannte Einschränkungen
+- **Analogwert (Systemdruck)**: Der IO-Link-Sensor konnte aufgrund eines defekten IO-Link-Moduls nicht in Betrieb genommen werden. Die Implementierung des Analogwerts (`Druck` in bar) ist daher nicht funktionsfähig. **Mit dem Lehrer abgesprochen und freigegeben.**
+
+---
+
 ## [2.1.0] – 2026-04-13 – CSV-Historien-Download
 
 ### Hinzugefügt
