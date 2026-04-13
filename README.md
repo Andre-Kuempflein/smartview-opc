@@ -251,13 +251,29 @@ sudo systemctl status smartview
 
 ## Screenshots
 
-Das Dashboard zeigt:
-1. **Navbar**: Projektname + Verbindungsstatus (grün/rot) + DEMO-Badge
-2. **Endlagen-Status**: LED-Indikatoren (AKTIV/INAKTIV mit Glow-Effekt)
-3. **Sensoren**: Magazin, Lichtschranke, Schlüsselschalter, Systemdruck
-4. **Status Aktoren**: Förderband, Lampen, Zylinder-Outputs
-5. **Historie**: Aufklappbare Tabelle der letzten Statusänderungen + CSV-Download
-6. **Toast-Meldungen**: Rote Fehlermeldungen bei OPC-Schreibfehler
+### Gesamtansicht – alle Sektionen auf einen Blick
+
+![Dashboard Gesamtansicht](docs/screenshots/04_dashboard_vollstaendig.png)
+
+Das Dashboard zeigt von oben nach unten:
+
+| Sektion | Beschreibung |
+|---------|-------------|
+| **Navbar** | Projektname, Verbindungsstatus (grün = verbunden) und letzter Aktualisierungszeitpunkt |
+| **Alarm-Banner** | Erscheint automatisch bei Grenzwertüberschreitung (hier: Systemdruck defekt) |
+| **Endlagen-Status** | LED-Indikatoren für Eingefahren / Ausgefahren (AKTIV = grün leuchtend) |
+| **Sensoren** | Magazin, Lichtschranke, Schlüsselschalter, Systemdruck |
+| **Status Aktoren** | Förderband, Lampen (Start/Richten), Zylinder-Outputs (Ein/Aus) |
+| **Historie** | Aufklappbare Tabelle der letzten Statusänderungen + CSV-Download-Button |
+
+---
+
+### Detailansicht – Endlagen & Sensoren
+
+![Endlagen und Sensoren](docs/screenshots/01_dashboard_gesamt.png)
+
+Gut erkennbar: Die **grünen LED-Indikatoren** (AKTIV) zeigen in Echtzeit den Zustand der Endlagen und Sensoren.
+Jeder Tag-Wert hat ein Qualitäts-Badge (`good` / `bad`) – bei OPC-Verbindungsproblemen wird dies sofort sichtbar.
 
 ---
 
