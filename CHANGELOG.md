@@ -5,6 +5,17 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.1.0] – 2026-04-13 – CSV-Historien-Download
+
+### Hinzugefügt
+- **CSV Download**: Neue Funktion zum Herunterladen der Prozessdaten (`history.csv`) direkt über das Dashboard
+- **Backend API**: Neuer Endpunkt `/api/download/history`, der die CSV bereitstellt
+- **Hintergrund-Logger**: `HistoryLogger` läuft nun im `app.py` als Thread im Hintergrund und schreibt im 5-Sekunden-Takt (`HISTORY_INTERVAL_S`) Werte via `TAG_NODES`
+- **Konfiguration**: Parameter für `HISTORY_ENABLED`, `HISTORY_INTERVAL_S`, `HISTORY_FILE` in `config.py` integriert
+- **Frontend**: Ein Download-Button neben "Anzeigen" im Bereich Historie 
+
+---
+
 ## [2.0.1] – 2026-03-16 – DB2 Migration
 
 ### Geändert

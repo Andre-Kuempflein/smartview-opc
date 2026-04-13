@@ -137,109 +137,217 @@
 
             </div>
 
-            <!-- ═══════ STEUERUNG ═══════ -->
+            <!-- ═══════ SENSOREN (DIGITAL) ═══════ -->
             <h5 class="section-title mb-3">
-                <i class="bi bi-joystick me-2"></i>Steuerung
+                <i class="bi bi-broadcast-pin me-2"></i>Sensoren
             </h5>
-            <div class="row g-4 mb-5" id="control-cards">
-
-                <!-- Taster Start -->
-                <div class="col-xl-4 col-lg-4 col-md-6">
-                    <div class="data-card control-card" id="card-taster_start">
+            <div class="row g-4 mb-5">
+                <!-- Sensor Magazin -->
+                <div class="col-xl-3 col-lg-6">
+                    <div class="data-card" id="card-sensor_magazin">
                         <div class="data-card-header">
-                            <div class="tag-icon control-icon-start">
-                                <i class="bi bi-play-circle-fill"></i>
-                            </div>
+                            <div class="tag-icon status-icon"><i class="bi bi-box-seam"></i></div>
                             <div>
-                                <div class="tag-label">Start</div>
-                                <div class="tag-id text-muted">taster_start</div>
+                                <div class="tag-label">Magazin</div>
+                                <div class="tag-id text-muted">sensor_magazin</div>
                             </div>
+                            <span class="quality-badge" id="quality-sensor_magazin">–</span>
                         </div>
                         <div class="data-card-body text-center">
-                            <div class="control-status">
-                                <div class="control-indicator off" id="indicator-taster_start"></div>
-                                <span class="control-label" id="label-taster_start">AUS</span>
+                            <div class="digital-status">
+                                <div class="digital-indicator off" id="indicator-sensor_magazin"></div>
+                                <span class="digital-label off" id="label-sensor_magazin">LEER</span>
                             </div>
-                            <button class="btn control-btn btn-outline-success mt-3" id="btn-taster_start"
-                                data-control="taster_start" onclick="toggleControl('taster_start')">
-                                <i class="bi bi-play-fill me-1"></i>
-                                <span>START</span>
-                            </button>
                         </div>
-                        <div class="data-card-footer">
-                            <small class="text-muted" id="time-taster_start">–</small>
+                    </div>
+                </div>
+
+                <!-- Lichtschranke -->
+                <div class="col-xl-3 col-lg-6">
+                    <div class="data-card" id="card-sensor_lichtschranke">
+                        <div class="data-card-header">
+                            <div class="tag-icon status-icon"><i class="bi bi-eye-fill"></i></div>
+                            <div>
+                                <div class="tag-label">Lichtschranke</div>
+                                <div class="tag-id text-muted">sensor_lichtschranke</div>
+                            </div>
+                            <span class="quality-badge" id="quality-sensor_lichtschranke">–</span>
+                        </div>
+                        <div class="data-card-body text-center">
+                            <div class="digital-status">
+                                <div class="digital-indicator off" id="indicator-sensor_lichtschranke"></div>
+                                <span class="digital-label off" id="label-sensor_lichtschranke">FREI</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Not-Halt Status -->
+                <div class="col-xl-3 col-lg-6">
+                    <div class="data-card" id="card-schalter_stopp_status">
+                        <div class="data-card-header">
+                            <div class="tag-icon status-icon"><i class="bi bi-exclamation-octagon"></i></div>
+                            <div>
+                                <div class="tag-label">Not-Halt / Stopp</div>
+                                <div class="tag-id text-muted">schalter_stopp</div>
+                            </div>
+                            <span class="quality-badge" id="quality-schalter_stopp_status">–</span>
+                        </div>
+                        <div class="data-card-body text-center">
+                            <div class="digital-status">
+                                <div class="digital-indicator off" id="indicator-schalter_stopp_status"></div>
+                                <span class="digital-label off" id="label-schalter_stopp_status">GESTOPPT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Systemdruck (Analog) -->
+                <div class="col-xl-3 col-lg-6">
+                    <div class="data-card" id="card-druck">
+                        <div class="data-card-header">
+                            <div class="tag-icon status-icon"><i class="bi bi-speedometer2"></i></div>
+                            <div>
+                                <div class="tag-label">Systemdruck</div>
+                                <div class="tag-id text-muted">druck</div>
+                            </div>
+                            <span class="quality-badge" id="quality-druck">–</span>
+                        </div>
+                        <div class="data-card-body d-flex align-items-center justify-content-center">
+                            <div class="analog-value-container">
+                                <span class="analog-value" id="value-druck">0.0</span>
+                                <span class="analog-unit">bar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════ STATUS AKTOREN ═══════ -->
+            <h5 class="section-title mb-3">
+                <i class="bi bi-gear-wide-connected me-2"></i>Status Aktoren
+            </h5>
+            <div class="row g-4 mb-5">
+                <!-- Förderband -->
+                <div class="col-xl-4">
+                    <div class="data-card" id="card-foerderband_status">
+                        <div class="data-card-header">
+                            <div class="tag-icon status-icon"><i class="bi bi-conveyor-belt"></i></div>
+                            <div class="tag-label">Förderband</div>
+                            <span class="quality-badge" id="quality-foerderband_status">–</span>
+                        </div>
+                        <div class="data-card-body text-center">
+                            <div class="digital-status">
+                                <div class="digital-indicator off" id="indicator-foerderband_status"></div>
+                                <span class="digital-label off" id="label-foerderband_status">AUS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Lampen -->
+                <div class="col-xl-4">
+                    <div class="data-card p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-bold">LAMPEN</small>
+                            <i class="bi bi-lamp"></i>
+                        </div>
+                        <div class="d-flex gap-4 justify-content-center">
+                            <div class="text-center">
+                                <div class="digital-indicator off mx-auto" id="indicator-lampe_start"></div>
+                                <small class="text-muted d-block mt-1">START</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="digital-indicator off mx-auto" id="indicator-lampe_richten"></div>
+                                <small class="text-muted d-block mt-1">RICHTEN</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Zylinder -->
+                <div class="col-xl-4">
+                    <div class="data-card p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-bold">ZYLINDER-OUTPUTS</small>
+                            <i class="bi bi-reception-4"></i>
+                        </div>
+                        <div class="d-flex gap-4 justify-content-center">
+                            <div class="text-center">
+                                <div class="digital-indicator off mx-auto" id="indicator-zylinder_einfahren"></div>
+                                <small class="text-muted d-block mt-1">EIN</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="digital-indicator off mx-auto" id="indicator-zylinder_ausfahren"></div>
+                                <small class="text-muted d-block mt-1">AUS</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════ STEUERUNG ═══════ -->
+            <h5 class="section-title mb-3">
+                <i class="bi bi-joystick me-2"></i>Bedienung
+            </h5>
+            <div class="row g-4 mb-5" id="control-cards">
+                <!-- Taster Start -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="data-card control-card" id="card-taster_start">
+                        <div class="data-card-header">
+                            <div class="tag-icon control-icon-start"><i class="bi bi-play-circle-fill"></i></div>
+                            <div class="tag-label">Start</div>
+                        </div>
+                        <div class="data-card-body text-center">
+                            <button class="btn control-btn btn-outline-success w-100" id="btn-taster_start" onclick="toggleControl('taster_start')">
+                                <i class="bi bi-play-fill me-1"></i><span>START</span>
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Schalter Stopp -->
-                <div class="col-xl-4 col-lg-4 col-md-6">
+                <div class="col-xl-4 col-md-6">
                     <div class="data-card control-card" id="card-schalter_stopp">
                         <div class="data-card-header">
-                            <div class="tag-icon control-icon-stopp">
-                                <i class="bi bi-stop-circle-fill"></i>
-                            </div>
-                            <div>
-                                <div class="tag-label">Stopp</div>
-                                <div class="tag-id text-muted">schalter_stopp</div>
-                            </div>
+                            <div class="tag-icon control-icon-stopp"><i class="bi bi-stop-circle-fill"></i></div>
+                            <div class="tag-label">Not-Halt / Stopp</div>
                         </div>
                         <div class="data-card-body text-center">
-                            <div class="control-status">
-                                <div class="control-indicator off" id="indicator-schalter_stopp"></div>
-                                <span class="control-label" id="label-schalter_stopp">AUS</span>
-                            </div>
-                            <button class="btn control-btn btn-outline-danger mt-3" id="btn-schalter_stopp"
-                                data-control="schalter_stopp" onclick="toggleControl('schalter_stopp')">
-                                <i class="bi bi-stop-fill me-1"></i>
-                                <span>STOPP</span>
+                            <button class="btn control-btn btn-outline-danger w-100" id="btn-schalter_stopp" onclick="toggleControl('schalter_stopp')">
+                                <i class="bi bi-stop-fill me-1"></i><span>STOPP</span>
                             </button>
-                        </div>
-                        <div class="data-card-footer">
-                            <small class="text-muted" id="time-schalter_stopp">–</small>
                         </div>
                     </div>
                 </div>
 
                 <!-- Taster Reset -->
-                <div class="col-xl-4 col-lg-4 col-md-6">
+                <div class="col-xl-4 col-md-6">
                     <div class="data-card control-card" id="card-taster_reset">
                         <div class="data-card-header">
-                            <div class="tag-icon control-icon-reset">
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                            </div>
-                            <div>
-                                <div class="tag-label">Reset</div>
-                                <div class="tag-id text-muted">taster_reset</div>
-                            </div>
+                            <div class="tag-icon control-icon-reset"><i class="bi bi-arrow-counterclockwise"></i></div>
+                            <div class="tag-label">Reset</div>
                         </div>
                         <div class="data-card-body text-center">
-                            <div class="control-status">
-                                <div class="control-indicator off" id="indicator-taster_reset"></div>
-                                <span class="control-label" id="label-taster_reset">AUS</span>
-                            </div>
-                            <button class="btn control-btn btn-outline-warning mt-3" id="btn-taster_reset"
-                                data-control="taster_reset" onclick="toggleControl('taster_reset')">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i>
-                                <span>RESET</span>
+                            <button class="btn control-btn btn-outline-warning w-100" id="btn-taster_reset" onclick="toggleControl('taster_reset')">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i><span>RESET</span>
                             </button>
-                        </div>
-                        <div class="data-card-footer">
-                            <small class="text-muted" id="time-taster_reset">–</small>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <!-- ═══════ HISTORIE ═══════ -->
             <h5 class="section-title mb-3 d-flex align-items-center justify-content-between">
                 <span><i class="bi bi-clock-history me-2"></i>Historie</span>
-                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#history-collapse" aria-expanded="false" aria-controls="history-collapse"
-                    id="history-toggle-btn">
-                    <i class="bi bi-chevron-down me-1"></i>Anzeigen
-                </button>
+                <div class="d-flex gap-2">
+                    <a href="/api/download/history" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download me-1"></i>CSV Download
+                    </a>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#history-collapse" aria-expanded="false" aria-controls="history-collapse"
+                        id="history-toggle-btn">
+                        <i class="bi bi-chevron-down me-1"></i>Anzeigen
+                    </button>
+                </div>
             </h5>
             <div class="collapse mb-5" id="history-collapse">
                 <div class="history-card">

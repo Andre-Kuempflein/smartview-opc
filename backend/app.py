@@ -11,7 +11,7 @@ import sys
 import logging
 import atexit
 
-from flask import Flask, jsonify, request, send_from_directory, abort
+from flask import Flask, jsonify, request, send_from_directory, abort, send_file
 from flask_cors import CORS
 
 # ── Projektverzeichnis zum Path hinzufügen ──
@@ -19,7 +19,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from backend.config import FLASK_HOST, FLASK_PORT, TAG_NODES, CONTROL_NODES, DEMO_MODE
+from backend.config import FLASK_HOST, FLASK_PORT, TAG_NODES, CONTROL_NODES, DEMO_MODE, HISTORY_FILE
 from backend.opc_client import OPCUAClient
 
 # ── Logging ────────────────────────────────────
@@ -39,6 +39,12 @@ CORS(app)
 opc = OPCUAClient()
 opc.start()
 atexit.register(opc.stop)
+
+# ── History Logger ──────────────────────────────
+from backend.history import HistoryLogger
+history_logger = HistoryLogger(opc)
+history_logger.start()
+atexit.register(history_logger.stop)
 
 
 # ═══════════════════════════════════════════════
@@ -113,6 +119,15 @@ def api_config():
             "icon": cfg.get("icon", "bi-toggle-off"),
         }
     return jsonify({"tags": config, "controls": controls})
+
+
+@app.route("/api/download/history")
+def api_download_history():
+    """Lade die History-CSV-Datei herunter."""
+    if os.path.exists(HISTORY_FILE):
+        return send_file(HISTORY_FILE, as_attachment=True)
+    else:
+        abort(404, description="History-Datei existiert noch nicht.")
 
 
 # ═══════════════════════════════════════════════

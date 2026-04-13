@@ -18,9 +18,9 @@ const SmartViewApp = (() => {
 
     // Control-spezifische Labels
     const CONTROL_LABELS = {
-        taster_start: { on: "STOPPEN", off: "START" },
-        schalter_stopp: { on: "FREIGEBEN", off: "STOPP" },
-        taster_reset: { on: "AKTIV", off: "RESET" },
+        taster_start: { on: "SENDET...", off: "START" },
+        taster_stopp: { on: "SENDET...", off: "STOPP" },
+        taster_reset: { on: "SENDET...", off: "RESET" },
     };
 
     // ── Zustandsverwaltung ────────────────────
@@ -331,7 +331,7 @@ const SmartViewApp = (() => {
     // ═══════════════════════════════════════════
 
     let historyTimer = null;
-    const HISTORY_TAGS = ["endlage_eingefahren", "endlage_ausgefahren"];
+    const HISTORY_TAGS = ["endlage_eingefahren", "endlage_ausgefahren", "sensor_magazin", "foerderband_status"];
     const HISTORY_POLL_MS = 5000;
 
     async function fetchHistory() {

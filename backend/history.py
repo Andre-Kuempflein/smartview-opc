@@ -18,11 +18,11 @@ import logging
 from datetime import datetime
 
 # Einstellungen aus der zentralen Konfigurationsdatei laden
-from config import (
+from backend.config import (
     HISTORY_ENABLED,
     HISTORY_FILE,
     HISTORY_INTERVAL_S,
-    OPC_TAGS,
+    TAG_NODES,
 )
 
 # Logger für diese Datei
@@ -77,7 +77,7 @@ class HistoryLogger:
                 writer = csv.writer(f)
 
                 # Kopfzeile: erste Spalte = Zeitstempel, dann alle Tag-Namen
-                headers = ["timestamp"] + list(OPC_TAGS.keys())
+                headers = ["timestamp"] + list(TAG_NODES.keys())
                 writer.writerow(headers)
 
             logger.info(f"Neue History-Datei angelegt: {HISTORY_FILE}")
@@ -100,9 +100,9 @@ class HistoryLogger:
             return
 
         # Zeile aufbauen: Zeitstempel zuerst, dann alle Werte in der
-        # Reihenfolge wie sie in OPC_TAGS definiert sind
+        # Reihenfolge wie sie in TAG_NODES definiert sind
         row = [datetime.now().isoformat()]
-        for tag_name in OPC_TAGS.keys():
+        for tag_name in TAG_NODES.keys():
             tag_data = values.get(tag_name)
             if tag_data is not None:
                 row.append(tag_data["value"])

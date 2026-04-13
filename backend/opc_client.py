@@ -267,14 +267,26 @@ class OPCUAClient:
             from opcua import ua
             ctrl_cfg = CONTROL_NODES[ctrl_name]
             node = self.client.get_node(ctrl_cfg["node_id"])
-            node.set_value(ua.DataValue(ua.Variant(bool_value, ua.VariantType.Boolean)))
-
-            with self._lock:
-                self._controls[ctrl_name]["value"] = bool_value
-                self._controls[ctrl_name]["timestamp"] = now
-
-            logger.info("Geschrieben: %s → %s", ctrl_name, "EIN" if bool_value else "AUS")
-            return True
+            
+            # Falls ein Puls konfiguriert ist (Ein -> Kurz warten -> Aus)
+            if ctrl_cfg.get("pulse"):
+                logger.info("Sende Puls (True -> False) an '%s'", ctrl_name)
+                node.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
+                time.sleep(0.3) # 300ms Pulsdauer
+                node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+                
+                with self._lock:
+                    self._controls[ctrl_name]["value"] = False
+                    self._controls[ctrl_name]["timestamp"] = now
+                return True
+            else:
+                # Normaler Toggle-Betrieb
+                node.set_value(ua.DataValue(ua.Variant(bool_value, ua.VariantType.Boolean)))
+                with self._lock:
+                    self._controls[ctrl_name]["value"] = bool_value
+                    self._controls[ctrl_name]["timestamp"] = now
+                logger.info("Geschrieben: %s → %s", ctrl_name, "EIN" if bool_value else "AUS")
+                return True
 
         except Exception as e:
             logger.error("Fehler beim Schreiben von '%s': %s", ctrl_name, e)
