@@ -117,6 +117,7 @@ def api_config():
         controls[name] = {
             "display_name": cfg["display_name"],
             "icon": cfg.get("icon", "bi-toggle-off"),
+            "pulse": cfg.get("pulse", False),
         }
     return jsonify({"tags": config, "controls": controls})
 

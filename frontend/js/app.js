@@ -18,26 +18,44 @@ const SmartViewApp = (() => {
 
     // Control-spezifische Labels
     const CONTROL_LABELS = {
-        taster_start: { on: "SENDET...", off: "START" },
-        schalter_stopp: { on: "SENDET...", off: "SCHLÜSSEL" },
-        taster_reset: { on: "SENDET...", off: "RESET" },
+        taster_start:   { on: "AKTIV",    off: "START"     },
+        schalter_stopp: { on: "EIN",      off: "SCHLÜSSEL" },
+        taster_reset:   { on: "AKTIV",    off: "RESET"     },
     };
 
     // ── Zustandsverwaltung ────────────────────
-    let previousValues = {};
-    let controlStates = {};
-    let isConnected = false;
-    let pollTimer = null;
-    let sending = {};  // Verhindert Doppelklicks
+    let previousValues  = {};
+    let controlStates   = {};
+    let controlConfig   = {};   // pulse/toggle-Info aus /api/config
+    let isConnected     = false;
+    let pollTimer       = null;
+    let sending         = {};   // Verhindert Doppelklicks
 
     // ── DOM-Elemente ──────────────────────────
-    const statusDot = document.getElementById("status-dot");
-    const statusText = document.getElementById("status-text");
-    const lastUpdate = document.getElementById("last-update");
-    const demoBadge = document.getElementById("demo-badge");
-    const alertsContainer = document.getElementById("alerts-container");
-    const alertCount = document.getElementById("alert-count");
-    const alertList = document.getElementById("alert-list");
+    const statusDot         = document.getElementById("status-dot");
+    const statusText        = document.getElementById("status-text");
+    const lastUpdate        = document.getElementById("last-update");
+    const demoBadge         = document.getElementById("demo-badge");
+    const alertsContainer   = document.getElementById("alerts-container");
+    const alertCount        = document.getElementById("alert-count");
+    const alertList         = document.getElementById("alert-list");
+    const toastContainer    = document.getElementById("toast-container");
+
+
+    // ═══════════════════════════════════════════
+    // Konfiguration laden (einmalig beim Start)
+    // ═══════════════════════════════════════════
+
+    async function loadConfig() {
+        try {
+            const res  = await fetch(`${API_BASE}/api/config`);
+            if (!res.ok) return;
+            const data = await res.json();
+            controlConfig = data.controls || {};
+        } catch (err) {
+            console.warn("Config konnte nicht geladen werden:", err);
+        }
+    }
 
 
     // ═══════════════════════════════════════════
@@ -55,12 +73,10 @@ const SmartViewApp = (() => {
             updateControls(data.controls);
             updateTimestamp();
 
-            // Demo-Badge anzeigen
             if (data.demo_mode && demoBadge) {
                 demoBadge.style.display = "inline-block";
             }
 
-            // Alerts separat laden
             fetchAlerts();
 
         } catch (err) {
@@ -93,14 +109,12 @@ const SmartViewApp = (() => {
                 updateDigitalCard(name, data);
             }
 
-            // Quality-Badge
             const badge = document.getElementById(`quality-${name}`);
             if (badge) {
                 badge.textContent = data.quality || "–";
-                badge.className = "quality-badge " + (data.quality || "");
+                badge.className   = "quality-badge " + (data.quality || "");
             }
 
-            // Timestamp
             const timeEl = document.getElementById(`time-${name}`);
             if (timeEl && data.timestamp) {
                 const d = new Date(data.timestamp);
@@ -111,17 +125,14 @@ const SmartViewApp = (() => {
 
     function updateDigitalCard(name, data) {
         const indicator = document.getElementById(`indicator-${name}`);
-        const label = document.getElementById(`label-${name}`);
+        const label     = document.getElementById(`label-${name}`);
 
         if (!indicator) return;
 
         const isOn = !!data.value;
-
-        // LED-Indikator
         indicator.classList.remove("on", "off");
         indicator.classList.add(isOn ? "on" : "off");
 
-        // Label
         if (label) {
             label.textContent = isOn ? "AKTIV" : "INAKTIV";
             label.classList.remove("on", "off");
@@ -131,11 +142,11 @@ const SmartViewApp = (() => {
 
     function updateAnalogCard(name, data) {
         const valueEl = document.getElementById(`value-${name}`);
-        const card = document.getElementById(`card-${name}`);
+        const card    = document.getElementById(`card-${name}`);
 
         if (!valueEl || data.value === null || data.value === undefined) return;
 
-        const val = parseFloat(data.value);
+        const val       = parseFloat(data.value);
         const formatted = Number.isInteger(val) ? val.toString() : val.toFixed(1);
 
         if (previousValues[name] !== formatted) {
@@ -146,10 +157,7 @@ const SmartViewApp = (() => {
             previousValues[name] = formatted;
         }
 
-        // Alert-Zustand
-        if (card) {
-            card.classList.remove("alert-active");
-        }
+        if (card) card.classList.remove("alert-active");
     }
 
 
@@ -164,48 +172,42 @@ const SmartViewApp = (() => {
             controlStates[name] = data.value;
 
             const indicator = document.getElementById(`indicator-${name}`);
-            const label = document.getElementById(`label-${name}`);
-            const btn = document.getElementById(`btn-${name}`);
-            const card = document.getElementById(`card-${name}`);
-            const timeEl = document.getElementById(`time-${name}`);
+            const label     = document.getElementById(`label-${name}`);
+            const btn       = document.getElementById(`btn-${name}`);
+            const card      = document.getElementById(`card-${name}`);
+            const timeEl    = document.getElementById(`time-${name}`);
 
             const isOn = !!data.value;
 
-            // Indikator
             if (indicator) {
                 indicator.classList.remove("on", "off");
                 indicator.classList.add(isOn ? "on" : "off");
             }
 
-            // Label
             if (label) {
                 label.textContent = isOn ? "EIN" : "AUS";
                 label.classList.remove("on", "off");
                 label.classList.add(isOn ? "on" : "off");
             }
 
-            // Button-Aussehen
             if (btn && !sending[name]) {
-                const labels = CONTROL_LABELS[name] || { on: "AUSSCHALTEN", off: "EINSCHALTEN" };
+                const labels   = CONTROL_LABELS[name] || { on: "AUSSCHALTEN", off: "EINSCHALTEN" };
                 const btnLabel = btn.querySelector("span");
                 if (btnLabel) {
                     btnLabel.textContent = isOn ? labels.on : labels.off;
                 }
-                btn.classList.remove("btn-outline-success", "btn-outline-danger", "btn-success", "btn-danger");
-                if (isOn) {
-                    btn.classList.add("btn-danger");
-                } else {
-                    btn.classList.add("btn-outline-success");
-                }
+                btn.classList.remove(
+                    "btn-outline-success", "btn-outline-danger",
+                    "btn-success", "btn-danger"
+                );
+                btn.classList.add(isOn ? "btn-danger" : "btn-outline-success");
             }
 
-            // Karte hervorheben wenn aktiv
             if (card) {
                 card.classList.remove("control-active");
                 if (isOn) card.classList.add("control-active");
             }
 
-            // Timestamp
             if (timeEl && data.timestamp) {
                 const d = new Date(data.timestamp);
                 timeEl.textContent = d.toLocaleTimeString("de-DE");
@@ -219,16 +221,24 @@ const SmartViewApp = (() => {
     // ═══════════════════════════════════════════
 
     async function _toggleControl(ctrlName) {
-        if (sending[ctrlName]) return;  // Doppelklick-Schutz
+        if (sending[ctrlName]) return;
 
-        const currentValue = controlStates[ctrlName] || false;
-        const newValue = !currentValue;
+        // Keine Verbindung → sofort Fehler anzeigen, nicht senden
+        if (!isConnected) {
+            showToast("Keine Verbindung zur SPS – Signal kann nicht gesendet werden.", "danger");
+            return;
+        }
+
+        // Puls-Buttons senden immer true (Backend pulst True→False).
+        // Toggle-Buttons flippen den aktuellen Zustand.
+        const isPulse   = controlConfig[ctrlName]?.pulse === true;
+        const newValue  = isPulse ? true : !(controlStates[ctrlName] || false);
 
         // Visuelles Feedback: Button deaktivieren
         const btn = document.getElementById(`btn-${ctrlName}`);
         if (btn) {
             sending[ctrlName] = true;
-            btn.disabled = true;
+            btn.disabled      = true;
             btn.classList.add("sending");
             const btnLabel = btn.querySelector("span");
             if (btnLabel) btnLabel.textContent = "Sende …";
@@ -236,9 +246,9 @@ const SmartViewApp = (() => {
 
         try {
             const res = await fetch(`${API_BASE}/api/control/${ctrlName}`, {
-                method: "POST",
+                method:  "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ value: newValue }),
+                body:    JSON.stringify({ value: newValue }),
             });
 
             if (!res.ok) {
@@ -248,25 +258,49 @@ const SmartViewApp = (() => {
 
             const data = await res.json();
             controlStates[ctrlName] = data.value;
-
-            // Sofort UI aktualisieren
             updateControls({ [ctrlName]: { value: data.value, timestamp: new Date().toISOString() } });
 
         } catch (err) {
             console.error(`Fehler beim Steuern von '${ctrlName}':`, err);
-            // Fehler-Feedback
-            if (btn) {
-                btn.classList.add("btn-warning");
-                setTimeout(() => btn.classList.remove("btn-warning"), 1500);
-            }
+            showToast(`Fehler: ${err.message}`, "danger");
         } finally {
-            // Button wieder freigeben
             if (btn) {
-                btn.disabled = false;
+                btn.disabled = !isConnected;   // nur freigeben wenn verbunden
                 btn.classList.remove("sending");
                 sending[ctrlName] = false;
             }
         }
+    }
+
+
+    // ═══════════════════════════════════════════
+    // Toast-Benachrichtigungen
+    // ═══════════════════════════════════════════
+
+    function showToast(message, type = "danger") {
+        if (!toastContainer) return;
+
+        const id      = `toast-${Date.now()}`;
+        const bgClass = type === "danger" ? "bg-danger" : "bg-warning text-dark";
+
+        const el = document.createElement("div");
+        el.id        = id;
+        el.className = `toast align-items-center text-white ${bgClass} border-0`;
+        el.setAttribute("role", "alert");
+        el.setAttribute("aria-live", "assertive");
+        el.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Schließen"></button>
+            </div>`;
+
+        toastContainer.appendChild(el);
+        const toast = new bootstrap.Toast(el, { delay: 5000 });
+        toast.show();
+        el.addEventListener("hidden.bs.toast", () => el.remove());
     }
 
 
@@ -318,6 +352,14 @@ const SmartViewApp = (() => {
             statusDot.classList.add("disconnected");
             statusText.textContent = "Getrennt";
         }
+
+        // Steuerungs-Buttons sperren/freigeben je nach Verbindung
+        document.querySelectorAll("[id^='btn-']").forEach(btn => {
+            if (!sending[btn.id.replace("btn-", "")]) {
+                btn.disabled = !connected;
+                btn.title    = connected ? "" : "Keine Verbindung zur SPS";
+            }
+        });
     }
 
     function updateTimestamp() {
@@ -331,8 +373,8 @@ const SmartViewApp = (() => {
     // ═══════════════════════════════════════════
 
     let historyTimer = null;
-    const HISTORY_TAGS = ["endlage_eingefahren", "endlage_ausgefahren", "sensor_magazin", "foerderband_status"];
-    const HISTORY_POLL_MS = 5000;
+    const HISTORY_TAGS     = ["endlage_eingefahren", "endlage_ausgefahren", "sensor_magazin", "foerderband_status"];
+    const HISTORY_POLL_MS  = 5000;
 
     async function fetchHistory() {
         const historyBody = document.getElementById("history-body");
@@ -347,7 +389,6 @@ const SmartViewApp = (() => {
                 )
             );
 
-            // Alle Einträge zusammenführen und nach Zeit sortieren (neueste zuerst)
             const allEntries = results.flat()
                 .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
                 .slice(0, 50);
@@ -358,10 +399,10 @@ const SmartViewApp = (() => {
             }
 
             historyBody.innerHTML = allEntries.map(entry => {
-                const d = new Date(entry.timestamp);
+                const d    = new Date(entry.timestamp);
                 const time = d.toLocaleTimeString("de-DE") + "." + String(d.getMilliseconds()).padStart(3, "0");
                 const displayName = entry.tag === "endlage_eingefahren" ? "Eingefahren" : "Ausgefahren";
-                const val = entry.value;
+                const val  = entry.value;
                 const badge = val
                     ? '<span class="badge bg-success">AKTIV</span>'
                     : '<span class="badge bg-secondary">INAKTIV</span>';
@@ -384,12 +425,12 @@ const SmartViewApp = (() => {
     }
 
     // ── Init ──────────────────────────────────
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+        await loadConfig();   // Puls/Toggle-Konfiguration vorab laden
         startPolling();
 
-        // Historie: beim Aufklappen laden, beim Zuklappen stoppen
         const histCollapse = document.getElementById("history-collapse");
-        const histBtn = document.getElementById("history-toggle-btn");
+        const histBtn      = document.getElementById("history-toggle-btn");
         if (histCollapse) {
             histCollapse.addEventListener("shown.bs.collapse", () => {
                 fetchHistory();

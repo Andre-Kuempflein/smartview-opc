@@ -267,14 +267,23 @@ class OPCUAClient:
             from opcua import ua
             ctrl_cfg = CONTROL_NODES[ctrl_name]
             node = self.client.get_node(ctrl_cfg["node_id"])
-            
-            # Falls ein Puls konfiguriert ist (Ein -> Kurz warten -> Aus)
+
             if ctrl_cfg.get("pulse"):
-                logger.info("Sende Puls (True -> False) an '%s'", ctrl_name)
+                # True synchron senden – schlägt hier fehl → Exception → False zurück
+                logger.info("Sende Puls an '%s' (True → False)", ctrl_name)
                 node.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
-                time.sleep(0.3) # 300ms Pulsdauer
-                node.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
-                
+
+                # False-Reset nach 300 ms im Hintergrund, damit Flask nicht blockiert
+                def _reset_pulse(n=node, cn=ctrl_name):
+                    time.sleep(0.3)
+                    try:
+                        n.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+                        logger.info("Puls-Reset OK: %s", cn)
+                    except Exception as ex:
+                        logger.error("Puls-Reset-Fehler '%s': %s", cn, ex)
+
+                threading.Thread(target=_reset_pulse, daemon=True).start()
+
                 with self._lock:
                     self._controls[ctrl_name]["value"] = False
                     self._controls[ctrl_name]["timestamp"] = now
